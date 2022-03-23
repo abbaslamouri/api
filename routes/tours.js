@@ -1,17 +1,17 @@
 const express = require('express')
-// const {
-//   checkId,
-//   cheapest5Alias,
-//   getAllTours,
-//   createTour,
-//   getTour,
-//   updateTour,
-//   deleteTour,
-//   getTourStats,
-//   getMonthlyPlan,
-//   getToursWithin,
-//   getDistances,
-// } = require('../controllers/tours')
+const {
+  //   checkId,
+  top5Tours,
+  //   getAllTours,
+  //   createTour,
+  //   getTour,
+  //   updateTour,
+  //   deleteTour,
+  getTourStats,
+  getMonthlyPlan,
+  //   getToursWithin,
+  //   getDistances,
+} = require('../controllers/tours')
 const { fetchAll, fetchDoc, createDoc, updateDoc, deleteDoc, checkId } = require('../controllers/factory')
 const Model = require('../models/tour')
 
@@ -26,8 +26,9 @@ router.param('id', checkId)
 // router.route('/:tourId/reviews').post(checkAuth, restrictTo('user'), createReview)
 // router.use('/:tourId/reviews', reviewRouter)
 
-// router.route('/cheapest5').get(cheapest5Alias, getAllTours)
-// router.route('/tour-stats').get(getTourStats)
+router.route('/top5Tours').get(top5Tours, fetchAll(Model))
+router.route('/stats').get(getTourStats)
+router.route('/monthly-plan/:year').get(getMonthlyPlan)
 // router.route('/monthly-plan/:year').get(checkAuth, restrictTo('admin', 'lead-guide', 'guide'), getMonthlyPlan)
 
 // router.route('/tours-within/:distance/center/:latlgt/unit/:unit').get(getToursWithin)

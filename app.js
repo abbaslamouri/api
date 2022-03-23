@@ -14,7 +14,7 @@ const tourRouter = require('./routes/tours')
 // const reviewRouter = require('./routes/reviewRoutes')
 // const viewRouter = require('./routes/viewRoutes')
 const AppError = require('./utils/AppError')
-// const errorHandler = require('./controllers/errorHandler')
+const errorHandler = require('./utils/errorHandler')
 
 const app = express()
 
@@ -71,7 +71,7 @@ app.all('*', (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server`, 404))
 })
 
-// app.use(errorHandler)
+app.use(errorHandler)
 
 // const port = 8000
 

@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "nodemon server",
-    "build": "NODE_ENV=production nodemon server"
+    "build": "NODE_ENV=production nodemon server",
+    "debug": "ndb server.js"
   },
   "keywords": [],
   "author": "",
@@ -20,6 +21,7 @@
     "slugify": "^1.6.5"
   },
   "devDependencies": {
+    "ndb": "^1.1.5",
     "nodemon": "^1.11.1"
   }
 }

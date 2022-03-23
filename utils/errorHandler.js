@@ -1,28 +1,39 @@
 const colors = require('colors')
 const AppError = require('./AppError')
 
+const sendError = (res, error) => {
+  if (process.env.NODE_ENV === 'production') {
+    if (error.isOperational) {
+      res.status(error.statusCode).json({
+        status: error.status,
+        message: error.message.split(',').join('<br>') || 'Server error',
+      })
+    } else {
+      res.status(500).json({
+        status: 'error',
+        message: 'Something went terribly wrong',
+      })
+    }
+  } else if (process.env.NODE_ENV === 'development') {
+    console.log('QQQQQQ', error)
+    res.status(error.statusCode || 500).json({
+      error,
+      status: error.status,
+      message: error.message.split(',').join('<br>') || 'Server error',
+      stack: error.stack,
+    })
+  }
+}
+
 module.exports = (err, req, res, next) => {
-  // console.log('ERRRRRR', err.message)
-  // console.log(colors.brightRed(err))
-  // console.log(colors.brightYellow(err))
+  console.log(colors.red.bold('ERRRRRR', err))
 
   let error = { ...err }
-  error.message = err.message
 
-  // Mongoose bad ObjectId
   if (err.name === 'CastError') {
-    error = new AppError(`Unable to find a document with this this id: ${error.value}`, 404)
+    error = new AppError(`Invalid ${err.path}: ${err.value}`, 400)
   }
 
-  // Mongoose validation error
-  if (err.name === 'ValidationError') {
-    error = new AppError(
-      Object.values(err.errors).map((item) => item.message),
-      400
-    )
-  }
-
-  // Mongoose duplicate key
   if (err.code === 11000) {
     const field = Object.keys(err.keyValue)[0]
     const fieldValue = Object.values(err.keyValue)[0]
@@ -34,16 +45,12 @@ module.exports = (err, req, res, next) => {
     )
   }
 
-  console.log('ERR', error.message)
-  // console.log('ERR', error.message.split(',').join('<br>'))?
+  if (err.name === 'ValidationError') {
+    error = new AppError(
+      Object.values(err.errors).map((item) => item.message),
+      400
+    )
+  }
 
-  res.status(error.statusCode || 500).json({
-    // statusCode: error.statusCode || 500,
-    name: error.name,
-    errors: error.errors,
-    errorCode: error.code,
-    errorValue: error.value,
-    status: 'error',
-    message: error.message.split(',').join('<br>') || 'Server error',
-  })
+  sendError(res, error)
 }
