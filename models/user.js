@@ -1,107 +1,109 @@
 const mongoose = require('mongoose')
+const jwt = require('jsonwebtoken')
+
 // const validator = require('validator')
-// const crypto = require('crypto')
+const crypto = require('crypto')
 const bcrypt = require('bcryptjs')
 
 const schema = new mongoose.Schema(
-	{
-		name: {
-			type: String,
-			required: [true, 'Name is required'],
-			trim: true,
-			maxlength: [100, 'Name cannot be more than 50 characters long'],
-		},
-		email: {
-			type: String,
-			trim: true,
-			unique: true,
-			lowercase: true,
-			required: [true, 'Email is required'],
-			match: [
-				/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
-				'Please enter a valid email address',
-			],
-		},
-		title: {
-			type: String,
-			trim: true,
-			maxlength: [20, 'Name cannot be more than 20 characters long'],
-		},
-		shippingAddresses: [
-			{
-				title: '',
-				name: { type: String, default: '' },
-				address: { type: String, default: '' },
-				city: { type: String, default: '' },
-				state: { type: String, default: '' },
-				postalCode: { type: String, default: '' },
-				country: { type: String, default: '' },
-				default: { type: Boolean, default: false },
-				addressType: {
-					type: String,
-					enum: ['Residential', 'Commercial'],
-					default: 'Residential',
-				},
-			},
-		],
+  {
+    name: {
+      type: String,
+      required: [true, 'Name is required'],
+      trim: true,
+      maxlength: [100, 'Name cannot be more than 50 characters long'],
+    },
+    email: {
+      type: String,
+      trim: true,
+      unique: true,
+      lowercase: true,
+      required: [true, 'Email is required'],
+      match: [
+        /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
+        'Please enter a valid email address',
+      ],
+    },
+    title: {
+      type: String,
+      trim: true,
+      maxlength: [20, 'Name cannot be more than 20 characters long'],
+    },
+    shippingAddresses: [
+      {
+        title: '',
+        name: { type: String, default: '' },
+        address: { type: String, default: '' },
+        city: { type: String, default: '' },
+        state: { type: String, default: '' },
+        postalCode: { type: String, default: '' },
+        country: { type: String, default: '' },
+        default: { type: Boolean, default: false },
+        addressType: {
+          type: String,
+          enum: ['Residential', 'Commercial'],
+          default: 'Residential',
+        },
+      },
+    ],
 
-		billingAddress: {
-			address: { type: String, default: '' },
-			city: { type: String, default: '' },
-			state: { type: String, default: '' },
-			postalCode: { type: String, default: '' },
-			country: { type: String, default: '' },
-		},
+    billingAddress: {
+      address: { type: String, default: '' },
+      city: { type: String, default: '' },
+      state: { type: String, default: '' },
+      postalCode: { type: String, default: '' },
+      country: { type: String, default: '' },
+    },
 
-		phones: [{ phoneType: String, phoneNumber: String, phoneCountryCode: String }],
+    phones: [{ phoneType: String, phoneNumber: String, phoneCountryCode: String }],
 
-		// avatar: { type: mongoose.Schema.Types.ObjectId, ref: Media },
-		role: {
-			type: String,
-			enum: ['admin', 'shop-manager', 'customer', 'user'],
-			default: 'user',
-		},
-		password: {
-			type: String,
-			required: [true, 'Pasword is required'],
-			minlength: [8, 'Password must contain at least 8 charcaters'],
-			select: false,
-		},
-		active: {
-			type: Boolean,
-			default: false,
-		},
-		deliveryInstructions: {
-			type: String,
-			maxlength: [2000, '2000 characters maximum'],
-		},
-		// cart: {
-		// 	type: Array,
-		// 	default: [],
-		// },
-		// wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
-		// confirmPassword: {
-		//   type: String,
-		//   required: [true, 'Confirmation Pasword is required'],
-		//   validate: {
-		//     // Only works on save()/create()
-		//     validator: function (val) {
-		//       return val === this.password
-		//     },
-		//     message: 'Passwords dont match',
-		//   },
-		// },
-		passwordResetToken: String,
-		passwordResetExpire: Date,
-		passwordChangeDate: Date,
-		// createdDate: {
-		//   type: Date,
-		//   default: Date.now(),
-		// },
-	},
-	{
-		timestamps: true,
-	}
+    // avatar: { type: mongoose.Schema.Types.ObjectId, ref: Media },
+    role: {
+      type: String,
+      enum: ['admin', 'shop-manager', 'customer', 'user'],
+      default: 'user',
+    },
+    password: {
+      type: String,
+      required: [true, 'Pasword is required'],
+      minlength: [8, 'Password must contain at least 8 charcaters'],
+      select: false,
+    },
+    active: {
+      type: Boolean,
+      default: false,
+    },
+    deliveryInstructions: {
+      type: String,
+      maxlength: [2000, '2000 characters maximum'],
+    },
+    // cart: {
+    // 	type: Array,
+    // 	default: [],
+    // },
+    // wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
+    // confirmPassword: {
+    //   type: String,
+    //   required: [true, 'Confirmation Pasword is required'],
+    //   validate: {
+    //     // Only works on save()/create()
+    //     validator: function (val) {
+    //       return val === this.password
+    //     },
+    //     message: 'Passwords dont match',
+    //   },
+    // },
+    passwordResetToken: String,
+    passwordResetExpire: Date,
+    passwordChangeDate: Date,
+    // createdDate: {
+    //   type: Date,
+    //   default: Date.now(),
+    // },
+  },
+  {
+    timestamps: true,
+  }
 )
 
 // const schema = new mongoose.Schema(
@@ -171,23 +173,27 @@ const schema = new mongoose.Schema(
 
 // Document Middleware, runs before save() and create()
 schema.pre('save', async function (next) {
-	if (!this.isModified('password')) return next()
-	const salt = await bcrypt.genSalt(12)
-	this.password = await bcrypt.hash(this.password, salt)
-	next()
+  if (!this.isModified('password')) return next()
+  const salt = await bcrypt.genSalt(12)
+  this.password = await bcrypt.hash(this.password, salt)
+  next()
 })
 
-// schema.pre('save', async function (next) {
-// if (!this.isModified('password') || this.isNew) return next()
-// this.passwordChangeDate = Date.now() - 1000
-// next()
-// })
+schema.pre('save', async function (next) {
+if (!this.isModified('password') || this.isNew) return next()
+this.passwordChangeDate = Date.now() - 1000
+next()
+})
 
 // Query Middleware
 // schema.pre(/^find/, function (next) {
 // this.find({ active: { $ne: false } })
 // next()
-// })
+// })\
+
+schema.methods.getSinedJwtToken = async function () {
+  return await jwt.sign({ id: this._id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRE })
+}
 
 // schema.methods.checkPassword = async function (password, hash) {
 // 	return await bcrypt.compare(password, hash)
@@ -200,12 +206,12 @@ schema.pre('save', async function (next) {
 // return false
 // }
 
-// schema.methods.createPasswordResetToken = async function () {
-// const resetToken = crypto.randomBytes(32).toString('hex')
-// this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex')
-// this.passwordResetExpires = Date.now() + 10 * 60 * 1000
-// return resetToken
-// }
+schema.methods.createPasswordResetToken = async function () {
+  const resetToken = crypto.randomBytes(32).toString('hex')
+  this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex')
+  this.passwordResetExpire = Date.now() + 60 * 60 * 1000
+  return resetToken
+}
 
 // // Query Middleware
 // schema.pre(/^find/, function (next) {

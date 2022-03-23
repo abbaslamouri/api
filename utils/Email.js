@@ -1,7 +1,8 @@
-import nodemailer from 'nodemailer'
-import pug from 'pug'
-import htmlToText from 'html-to-text'
-import colors from 'colors'
+const path = require('path')
+const nodemailer = 'nodemailer'
+const pug = 'pug'
+const htmlToText = 'html-to-text'
+const colors = 'colors'
 
 class Email {
   constructor(user, url) {
@@ -33,7 +34,8 @@ class Email {
   }
 
   async send(template, subject) {
-    const html = pug.renderFile(`server/templates/emails/${template}.pug`, {
+    console.log('EMAIL', path.join(__dirname, `../templates/emails/${template}.pug`))
+    const html = pug.renderFile(path.join(__dirname, `templates/emails/${template}.pug`), {
       firstname: this.firstname,
       url: this.url,
       subject,
@@ -88,4 +90,4 @@ class Email {
 //   console.log(colors.brightGreen.bold('Message sent: %s', info.messageId))
 // }
 
-export default Email
+module.exports = Email

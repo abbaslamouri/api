@@ -6,7 +6,7 @@ const sendError = (res, error) => {
     if (error.isOperational) {
       res.status(error.statusCode).json({
         status: error.status,
-        message: error.message.split(',').join('<br>') || 'Server error',
+        message: error.message ? error.message.split(',').join('<br>') || 'Server error' : '',
       })
     } else {
       res.status(500).json({
@@ -15,26 +15,25 @@ const sendError = (res, error) => {
       })
     }
   } else if (process.env.NODE_ENV === 'development') {
-    console.log('QQQQQQ', error)
     res.status(error.statusCode || 500).json({
       error,
       status: error.status,
-      message: error.message.split(',').join('<br>') || 'Server error',
+      message: error.message ? error.message.split(',').join('<br>') || 'Server error' : '',
       stack: error.stack,
     })
   }
 }
 
 module.exports = (err, req, res, next) => {
-  console.log(colors.red.bold('ERRRRRR', err))
+  // console.log(colors.red.bold('ERRRRRR', err.message))
+  // console.log(colors.red.bold('STACK', err.stack))
 
-  let error = { ...err }
+  let error = {}
+  // console.log('AAAAAAA', typeof err, object)
 
   if (err.name === 'CastError') {
     error = new AppError(`Invalid ${err.path}: ${err.value}`, 400)
-  }
-
-  if (err.code === 11000) {
+  } else if (err.code === 11000) {
     const field = Object.keys(err.keyValue)[0]
     const fieldValue = Object.values(err.keyValue)[0]
     error = new AppError(
@@ -43,14 +42,12 @@ module.exports = (err, req, res, next) => {
       } must be unique.  A document with ${field} = ${fieldValue} exists in the database`,
       400
     )
-  }
-
-  if (err.name === 'ValidationError') {
+  } else if (err.name === 'ValidationError') {
     error = new AppError(
       Object.values(err.errors).map((item) => item.message),
       400
     )
-  }
+  } else error = err
 
   sendError(res, error)
 }
