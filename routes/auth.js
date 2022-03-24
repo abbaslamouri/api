@@ -12,21 +12,21 @@ const express = require('express')
 // uploadUserPhoto,
 // } = require('../controllers/users')
 const {
-  signup,
-  completeRegistration,
-  signin,
-  forgotPassword,
-  resetPassword,
-  // updateMyPassword,
-  // checkAuth,
-  // restrictTo,
-  // logout,
+	signup,
+	completeSignup,
+	signin,
+	forgotPassword,
+	resetPassword,
+	// updateMyPassword,
+	// checkAuth,
+	// restrictTo,
+	// logout,
 } = require('../controllers/auth')
 
 const router = express.Router()
 
 router.route('/signup').post(signup)
-router.route('/completeRignup/:token').patch(completeRegistration)
+router.route('/completeSignup/:token').patch(completeSignup)
 router.route('/signin').post(signin)
 // router.route('/logout').get(logout)
 router.route('/forgotPassword').post(forgotPassword)
