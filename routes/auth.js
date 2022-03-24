@@ -12,15 +12,17 @@ const express = require('express')
 // uploadUserPhoto,
 // } = require('../controllers/users')
 const {
-	signup,
-	completeSignup,
-	signin,
-	forgotPassword,
-	resetPassword,
-	// updateMyPassword,
-	// checkAuth,
-	// restrictTo,
-	// logout,
+  signup,
+  completeSignup,
+  signin,
+  forgotPassword,
+  resetPassword,
+  updateLoggedInPassword,
+  protect,
+  // updateMyPassword,
+  // checkAuth,
+  // restrictTo,
+  // logout,
 } = require('../controllers/auth')
 
 const router = express.Router()
@@ -32,9 +34,9 @@ router.route('/signin').post(signin)
 router.route('/forgotPassword').post(forgotPassword)
 router.route('/resetPassword/:token').patch(resetPassword)
 
-// router.use(checkAuth)
+router.use(protect)
 
-// router.route('/update-my-password').patch(updateMyPassword)
+router.route('/updateLoggedInPassword').patch(updateLoggedInPassword)
 
 // router.route('/get-me').get(getMe, getUser)
 // router.route('/update-me').patch(uploadUserPhoto, updateMe)

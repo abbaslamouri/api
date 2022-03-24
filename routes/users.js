@@ -1,25 +1,26 @@
 const express = require('express')
 
-// const {
-// getAllUsers,
-// createUser,
-// getUser,
-// updateUser,
-// deleteUser,
-// getMe,
-// updateMe,
-// deleteMe,
-// uploadUserPhoto,
-// } = require('../controllers/users')
 const {
-	signup,
-	// login,
-	// forgotPassword,
-	// resetPassword,
-	// updateMyPassword,
-	// checkAuth,
-	// restrictTo,
-	// logout,
+  updateLoggedInData,
+  // getAllUsers,
+  // createUser,
+  // getUser,
+  // updateUser,
+  // deleteUser,
+  // getMe,
+  // updateMe,
+  // deleteMe,
+  // uploadUserPhoto,
+} = require('../controllers/users')
+const {
+  signup,
+  // login,
+  // forgotPassword,
+  // resetPassword,
+  // updateMyPassword,
+  protect,
+  // restrictTo,
+  // logout,
 } = require('../controllers/auth')
 
 const router = express.Router()
@@ -30,12 +31,13 @@ router.route('/signup').post(signup)
 // router.route('/forgot-password').post(forgotPassword)
 // router.route('/reset-password/:token').patch(resetPassword)
 
-// router.use(checkAuth)
+router.use(protect)
 
 // router.route('/update-my-password').patch(updateMyPassword)
 
-// router.route('/get-me').get(getMe, getUser)
-// router.route('/update-me').patch(uploadUserPhoto, updateMe)
+// router.route('/getCurrentUser').get(getCurrentUser, getUser)
+// router.route('/update').patch(uploadUserPhoto, updateMe)
+router.route('/updateLoggedInData').patch(updateLoggedInData)
 // router.route('/delete-me').delete(deleteMe)
 
 // router.use(restrictTo('admin'))
