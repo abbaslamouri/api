@@ -49,17 +49,17 @@ const sendTokenResponse = async (res, statusCode, user = null, expiresIn = null)
   })
 
   // const token = await signToken(user._id)
-  const cookieOptions = {
-    expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRATION * 24 * 60 * 60 * 1000),
-    httpOnly: true,
-  }
+  // const cookieOptions = {
+  //   expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRATION * 24 * 60 * 60 * 1000),
+  //   httpOnly: true,
+  // }
   // if (process.env.NODE_ENV === 'production') cookieOptions.secure = true
   // res.cookie('jwt', token, cookieOptions)
   user.password = undefined
   res.status(statusCode).json({
     status: 'success',
-    token,
-    data: user,
+    // token,
+    data: auth,
   })
 }
 
@@ -123,19 +123,19 @@ exports.completeRegistration = asyncHandler(async (req, res, next) => {
   user.password = req.body.password
   user.passwordResetToken = undefined
   user.passwordResetExpire = undefined
-  await user.save({user})
+  await user.save({ user })
   const url = `${process.env.BASE_URL}`
   // await new Email(user, url).sendWelcome()
   return await sendTokenResponse(res, 200, user)
 })
 
-exports.login = asyncHandler(async (req, res, next) => {
-  // const { email, password } = req.body
-  // if (!email || !password) return next(new AppError('Email and Password are required', 401))
-  // const user = await Model.findOne({ email }).select('+password')
-  // if (!user || !(await user.checkPassword(password, user.password)))
-  // 	return next(new AppError('Invalid email or password', 401))
-  // createSendToken(user, 200, res)
+exports.signin = asyncHandler(async (req, res, next) => {
+  const { email, password } = req.body
+  if (!email || !password) return next(new AppError('Email and Password are required', 401))
+  const user = await Model.findOne({ email }).select('+password')
+  if (!user || !(await user.checkPassword(password, user.password)))
+    return next(new AppError('Invalid email or password', 401))
+  sendTokenResponse(res, 200, user)
   // res.status(200).json({
   //   status: 'success',
   //   token: await signToken(user._id),
@@ -154,24 +154,33 @@ exports.logout = asyncHandler(async (req, res, next) => {
   // })
 })
 
-exports.checkAuth = asyncHandler(async (req, res, next) => {
-  // let token = ''
-  // if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-  // 	token = req.headers.authorization.split(' ')[1]
-  // } else if (req.cookies && req.cookies.jwt) {
-  // 	token = req.cookies.jwt
-  // }
-  // if (!token) return next(new AppError('You are not allowed to access these resources, please login', 401))
-  // const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET)
-  // const user = await Model.findById(decoded.id)
-  // if (!user) return next(new AppError('We cannot find a user with this token in our database', 401))
-  // if (await user.hasPasswordChanged(decoded.iat))
-  // 	return next(new AppError('User changed password recently, please login again', 401))
-  // req.user = user
-  // next()
+exports.protect = asyncHandler(async (req, res, next) => {
+  let token = ''
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    token = req.headers.authorization.split(' ')[1]
+    console.log('TOKEN', token)
+    return next()
+  } else if (req.cookies && req.cookies.jwt) {
+    token = req.cookies.jwt
+  }
+  if (!token) return next(new AppError('You are not allowed to access these resources, please login', 401))
+  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET)
+  const user = await Model.findById(decoded.id)
+  if (!user) return next(new AppError('We cannot find a user with this token in our database', 401))
+  if (await user.hasPasswordChanged(decoded.iat))
+    return next(new AppError('User changed password recently, please login again', 401))
+  req.user = user
+  next()
 })
 
-exports.isLoggedIn = async (req, res, next) => {
+exports.authorize = (...roles) =>
+  asyncHandler(async (req, res, next) => {
+    if (!roles.includes(req.user.role))
+      return next(new AppError('You do not have adequate permisson to perform this action', 403))
+    next()
+  })
+
+exports.isLoggedIn = asyncHandler(async (req, res, next) => {
   // if (!req.cookies || !req.cookies.jwt) return next()
   // const decoded = await promisify(jwt.verify)(req.cookies.jwt, process.env.JWT_SECRET)
   // const user = await Model.findById(decoded.id)
@@ -179,15 +188,7 @@ exports.isLoggedIn = async (req, res, next) => {
   // if (await user.hasPasswordChanged(decoded.iat)) return next()
   // res.locals.user = user
   // next()
-}
-
-exports.restrictTo = (...roles) => {
-  // return (req, res, next) => {
-  // 	if (!roles.includes(req.user.role))
-  // 		return next(new AppError('You do not have adequate permisson to perform this action', 403))
-  // 	next()
-  // }
-}
+})
 
 exports.forgotPassword = asyncHandler(async (req, res, next) => {
   const { email } = req.body

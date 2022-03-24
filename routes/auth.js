@@ -14,7 +14,7 @@ const express = require('express')
 const {
   signup,
   completeRegistration,
-  // login,
+  signin,
   // forgotPassword,
   // resetPassword,
   // updateMyPassword,
@@ -27,7 +27,7 @@ const router = express.Router()
 
 router.route('/signup').post(signup)
 router.route('/complete-registration/:token').patch(completeRegistration)
-// router.route('/login').post(login)
+router.route('/signin').post(signin)
 // router.route('/logout').get(logout)
 // router.route('/forgot-password').post(forgotPassword)
 // router.route('/reset-password/:token').patch(resetPassword)

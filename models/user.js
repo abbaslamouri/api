@@ -180,9 +180,9 @@ schema.pre('save', async function (next) {
 })
 
 schema.pre('save', async function (next) {
-if (!this.isModified('password') || this.isNew) return next()
-this.passwordChangeDate = Date.now() - 1000
-next()
+  if (!this.isModified('password') || this.isNew) return next()
+  this.passwordChangeDate = Date.now() - 1000
+  next()
 })
 
 // Query Middleware
@@ -195,9 +195,9 @@ schema.methods.getSinedJwtToken = async function () {
   return await jwt.sign({ id: this._id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRE })
 }
 
-// schema.methods.checkPassword = async function (password, hash) {
-// 	return await bcrypt.compare(password, hash)
-// }
+schema.methods.checkPassword = async function (password, hash) {
+  return await bcrypt.compare(password, hash)
+}
 
 // schema.methods.hasPasswordChanged = async function (JWTTimestamp) {
 // if (this.passwordChangeDate) {

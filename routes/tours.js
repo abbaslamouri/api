@@ -15,7 +15,7 @@ const {
 const { fetchAll, fetchDoc, createDoc, updateDoc, deleteDoc, checkId } = require('../controllers/factory')
 const Model = require('../models/tour')
 
-// const { checkAuth, restrictTo } = require('../controllers/auth')
+const { protect, authorize } = require('../controllers/auth')
 
 // const reviewRouter = require('../routes/reviews')
 
@@ -34,7 +34,7 @@ router.route('/monthly-plan/:year').get(getMonthlyPlan)
 // router.route('/tours-within/:distance/center/:latlgt/unit/:unit').get(getToursWithin)
 // router.route('/distances/:latlgt/unit/:unit').get(getDistances)
 
-router.route('/').get(fetchAll(Model)).post(createDoc(Model))
+router.route('/').get(fetchAll(Model)).post(protect, createDoc(Model))
 router.route('/:id').get(fetchDoc(Model)).patch(updateDoc(Model)).delete(deleteDoc(Model))
 // router
 //   .route('/:id')

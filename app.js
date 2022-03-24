@@ -7,7 +7,7 @@ const colors = require('colors')
 // var xss = require('xss-clean')
 // const hpp = require('hpp')
 const morgan = require('morgan')
-// var cookieParser = require('cookie-parser')
+var cookieParser = require('cookie-parser')
 
 const tourRouter = require('./routes/tours')
 const authRouter = require('./routes/auth')
@@ -52,7 +52,7 @@ if (process.env.NODE_ENV == 'development') app.use(morgan('dev'))
 // })
 // app.use('/api', limitter)
 
-// app.use(cookieParser())
+app.use(cookieParser())
 
 // app.use((req, res, next) => {
 //   req.requestTime = new Date().toISOString()
