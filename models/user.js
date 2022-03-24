@@ -191,20 +191,20 @@ schema.pre('save', async function (next) {
 // next()
 // })\
 
-schema.methods.getSinedJwtToken = async function () {
-  return await jwt.sign({ id: this._id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRE })
+schema.methods.getSinedJwtToken = function () {
+  return jwt.sign({ id: this._id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRE })
 }
 
 schema.methods.checkPassword = async function (password, hash) {
   return await bcrypt.compare(password, hash)
 }
 
-// schema.methods.hasPasswordChanged = async function (JWTTimestamp) {
-// if (this.passwordChangeDate) {
-//   return parseInt(this.passwordChangeDate.getTime(), 10) / 1000 > JWTTimestamp
-// }
-// return false
-// }
+schema.methods.hasPasswordChanged = async function (JWTTimestamp) {
+  if (this.passwordChangeDate) {
+    return parseInt(this.passwordChangeDate.getTime(), 10) / 1000 > JWTTimestamp
+  }
+  return false
+}
 
 schema.methods.createPasswordResetToken = async function () {
   const resetToken = crypto.randomBytes(32).toString('hex')

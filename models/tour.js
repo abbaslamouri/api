@@ -40,14 +40,14 @@ const schema = new mongoose.Schema(
     rating: {
       type: Number,
       default: 4.5,
-      min: [0, 'Minimum 0'],
-      max: [5, 'Maximum 5'],
+      min: [0, 'Rating must be >=  0'],
+      max: [5, 'Rating must be <= 5'],
     },
     ratingsAverage: {
       type: Number,
       default: 4.5,
-      min: [0, 'Ratings must be >=  0'],
-      max: [5, 'Ratings must be <= to 5'],
+      min: [0, 'Ratings Average must be >=  0'],
+      max: [5, 'Ratings Average must be <= to 5'],
       set: (val) => Math.round(val * 10) / 10,
     },
     ratingsQuantity: {

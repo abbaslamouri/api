@@ -1,6 +1,6 @@
-// const jwt = require('jsonwebtoken')
+const jwt = require('jsonwebtoken')
 const crypto = require('crypto')
-// const { promisify } = require('util')
+const { promisify } = require('util')
 const Model = require('../models/user.js')
 const AppError = require('../utils/AppError')
 const asyncHandler = require('../utils/asyncHandler')
@@ -80,8 +80,7 @@ exports.signup = asyncHandler(async (req, res, next) => {
   await user.save()
   user.password = undefined
   // try {
-  // const emailObj = await new Email(user, url).sendCompleteRegistration()
-  // console.log(emailObj)
+  await new Email(user, url).sendCompleteRegistration()
   res.status(200).json({
     status: 'success',
     message: `Email sent to ${user.email}.  Please follow the link in your email to complete your registration`,
@@ -158,23 +157,22 @@ exports.protect = asyncHandler(async (req, res, next) => {
   let token = ''
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     token = req.headers.authorization.split(' ')[1]
-    console.log('TOKEN', token)
-    return next()
   } else if (req.cookies && req.cookies.jwt) {
     token = req.cookies.jwt
   }
   if (!token) return next(new AppError('You are not allowed to access these resources, please login', 401))
   const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET)
-  const user = await Model.findById(decoded.id)
-  if (!user) return next(new AppError('We cannot find a user with this token in our database', 401))
-  if (await user.hasPasswordChanged(decoded.iat))
+  const decodedUser = await Model.findById(decoded.id)
+  if (!decodedUser) return next(new AppError('We cannot find a user with this token in our database', 401))
+  if (await decodedUser.hasPasswordChanged(decoded.iat))
     return next(new AppError('User changed password recently, please login again', 401))
-  req.user = user
+  req.user = decodedUser
   next()
 })
 
 exports.authorize = (...roles) =>
   asyncHandler(async (req, res, next) => {
+    console.log('RRRRR', roles)
     if (!roles.includes(req.user.role))
       return next(new AppError('You do not have adequate permisson to perform this action', 403))
     next()
@@ -192,50 +190,48 @@ exports.isLoggedIn = asyncHandler(async (req, res, next) => {
 
 exports.forgotPassword = asyncHandler(async (req, res, next) => {
   const { email } = req.body
-  // if (!email) return next(new AppError('Please enter a valid email', 404))
+  if (!email) return next(new AppError('Please enter a valid email', 404))
+  const user = await Model.findOne({ email })
+  if (!user) return next(new AppError('We cannot find user with this email in our database', 404))
+  const resetToken = await user.createPasswordResetToken()
+  await user.save({ validateBeforeSave: false })
+  const resetUrl = `${req.protocol}//:${req.get('host')}/api/v1/users/resetPassword/${resetToken}`
+  const message = `Forgot your password?  Submit a PATCH request with password and passwordConfirm to: ${resetUrl}.  If you did not forget your password, please ignore this email.`
 
-  // const user = await Model.findOne({ email })
-  // if (!user) return next(new AppError('We cannot find user with this email in our database', 404))
+  try {
+    await sendEmail({
+      to: user.email,
+      subject: 'Your password reset token (valid for 10 minutes)',
+      text: message,
+    })
+    createSendToken({}, 200, res)
 
-  // const resetToken = await user.createPasswordResetToken()
-  // await user.save({ validateBeforeSave: false })
-  // const resetUrl = `${req.protocol}//:${req.get('host')}/api/v1/users/reset-password/${resetToken}`
-  // const message = `Forgot your password?  Submit a PATCH request with password and passwordConfirm to: ${resetUrl}.  If you did not forget your password, please ignore this email.`
-
-  // try {
-  // 	await sendEmail({
-  // 		to: user.email,
-  // 		subject: 'Your password reset token (valid for 10 minutes)',
-  // 		text: message,
-  // 	})
-  // 	createSendToken({}, 200, res)
-
-  // 	// res.status(200).json({
-  // 	//   status: 'success',
-  // 	//   message: 'Check your email for a password reset token',
-  // 	// })
-  // } catch (error) {
-  // 	user.passwordResetToken = undefined
-  // 	user.passwordResetExpires = undefined
-  // 	await user.save({ validateBeforeSave: false })
-  // 	return next(new AppError('There was an error sending the message, please try agian later', 500))
-  // }
+    // res.status(200).json({
+    //   status: 'success',
+    //   message: 'Check your email for a password reset token',
+    // })
+  } catch (error) {
+    user.passwordResetToken = undefined
+    user.passwordResetExpires = undefined
+    await user.save({ validateBeforeSave: false })
+    return next(new AppError('There was an error sending the message, please try agian later', 500))
+  }
 })
 
 exports.resetPassword = asyncHandler(async (req, res, next) => {
-  // const hashedToken = await crypto.createHash('sha256').update(req.params.token).digest('hex')
-  // const user = await Model.findOne({ passwordResetToken: hashedToken, passwordResetExpires: { $gt: Date.now() } })
-  // if (!user) return next(new AppError('Token is invlaid or has expired', 400))
-  // user.password = req.body.password
-  // user.passwordConfirm = req.body.passwordConfirm
-  // user.passwordResetToken = undefined
-  // user.passwordResetExpires = undefined
-  // await user.save()
-  // createSendToken(user, 200, res)
-  // // res.status(200).json({
-  // //   status: 'success',
-  // //   token: await signToken(user._id),
-  // // })
+  const hashedToken = await crypto.createHash('sha256').update(req.params.token).digest('hex')
+  const user = await Model.findOne({ passwordResetToken: hashedToken, passwordResetExpires: { $gt: Date.now() } })
+  if (!user) return next(new AppError('Token is invlaid or has expired', 400))
+  user.password = req.body.password
+  user.passwordConfirm = req.body.passwordConfirm
+  user.passwordResetToken = undefined
+  user.passwordResetExpires = undefined
+  await user.save()
+  createSendToken(user, 200, res)
+  // res.status(200).json({
+  //   status: 'success',
+  //   token: await signToken(user._id),
+  // })
 })
 
 exports.updateMyPassword = asyncHandler(async (req, res, next) => {

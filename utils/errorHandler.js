@@ -47,6 +47,10 @@ module.exports = (err, req, res, next) => {
       Object.values(err.errors).map((item) => item.message),
       400
     )
+  } else if (err.name === 'JsonWebTokenError') {
+    error = new AppError(`Invalid token`, 401)
+  } else if (err.name === 'TokenExpiredError') {
+    error = new AppError(`Your token has expired, pleaselogin`, 401)
   } else error = err
 
   sendError(res, error)

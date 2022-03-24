@@ -35,7 +35,7 @@ class Email {
 
   async send(template, subject) {
     console.log('EMAIL', path.join(__dirname, `../templates/emails/${template}.pug`))
-    const html = pug.renderFile(path.join(__dirname, `templates/emails/${template}.pug`), {
+    const html = pug.renderFile(path.join(__dirname, `../templates/emails/${template}.pug`), {
       firstname: this.firstname,
       url: this.url,
       subject,
@@ -55,7 +55,7 @@ class Email {
   }
 
   async sendCompleteRegistration() {
-    await this.send('complete-registration', 'Please complete your registration within 10 minutes')
+    await this.send('complete-signup', 'Please complete your registration within 10 minutes')
   }
 
   async sendWelcome() {

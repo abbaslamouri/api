@@ -15,8 +15,8 @@ const {
   signup,
   completeRegistration,
   signin,
-  // forgotPassword,
-  // resetPassword,
+  forgotPassword,
+  resetPassword,
   // updateMyPassword,
   // checkAuth,
   // restrictTo,
@@ -26,11 +26,11 @@ const {
 const router = express.Router()
 
 router.route('/signup').post(signup)
-router.route('/complete-registration/:token').patch(completeRegistration)
+router.route('/completeRignup/:token').patch(completeRegistration)
 router.route('/signin').post(signin)
 // router.route('/logout').get(logout)
-// router.route('/forgot-password').post(forgotPassword)
-// router.route('/reset-password/:token').patch(resetPassword)
+router.route('/forgotPassword').post(forgotPassword)
+router.route('/resetPassword/:token').patch(resetPassword)
 
 // router.use(checkAuth)
 
