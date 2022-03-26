@@ -6,52 +6,18 @@ const AppError = require('../utils/AppError')
 const asyncHandler = require('../utils/asyncHandler')
 const Email = require('../utils/Email')
 
-// const sendTokenResponse = async (res, user = null, expiresIn = null) => {
-//   let auth = null
-//   if (user) {
-//     const token = await user.getSinedJwtToken()
-//     auth = { token, user: { _id: user._id, name: user.name, email: user.email, role: user.role } }
-//   }
-//   const expires = !expiresIn
-//     ? new Date(Date.now() + config.COOKIE_EXPIRE * 24 * 60 * 60 * 1000)
-//     : new Date(Date.now() + expiresIn)
-
-//   setCookie(res, 'auth', JSON.stringify(auth), {
-//     expires,
-//     httpOnly: true,
-//     secure: config.NODE_ENV === 'production' ? true : false,
-//     path: '/',
-//   })
-//   return auth
-// }
-
-// const sendEmail = require('../utils/mail')
-
-// const signToken = async (id) => {
-// 	return promisify(jwt.sign)({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRATION })
-// }
-
 const sendTokenResponse = async (res, statusCode, user) => {
   let token = null
   if (user) {
     token = await user.getSinedJwtToken()
     auth = { token, user: { _id: user._id, name: user.name, email: user.email, role: user.role } }
   }
-  const expires = new Date(Date.now() + process.env.JWT_COOKIE_EXPIRESIN * 24 * 60 * 60 * 1000)
   res.cookie('auth', JSON.stringify(auth), {
-    expires,
+    expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000),
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production' ? true : false,
     // path: '/',
   })
-
-  // const token = await signToken(user._id)
-  // const cookieOptions = {
-  //   expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRATION * 24 * 60 * 60 * 1000),
-  //   httpOnly: true,
-  // }
-  // if (process.env.NODE_ENV === 'production') cookieOptions.secure = true
-  // res.cookie('jwt', token, cookieOptions)
   user.password = undefined
   res.status(statusCode).json({
     status: 'success',
@@ -136,16 +102,18 @@ exports.signin = asyncHandler(async (req, res, next) => {
   // })
 })
 
-exports.logout = asyncHandler(async (req, res, next) => {
-  // const cookieOptions = {
-  // 	expires: new Date(Date.now() + 1000),
-  // 	httpOnly: true,
-  // }
-  // res.cookie('jwt', '', cookieOptions)
-  // res.status(200).json({
-  // 	status: 'success',
-  // 	data: null,
-  // })
+exports.signout = asyncHandler(async (req, res, next) => {
+  auth = { token: ' ', user: {} }
+  res.cookie('auth', JSON.stringify(auth), {
+    expires: new Date(Date.now() + 1000),
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production' ? true : false,
+    // path: '/',
+  })
+  res.status(200).json({
+    status: 'success',
+    data: auth,
+  })
 })
 
 exports.protect = asyncHandler(async (req, res, next) => {
@@ -167,7 +135,6 @@ exports.protect = asyncHandler(async (req, res, next) => {
 
 exports.authorize = (...roles) =>
   asyncHandler(async (req, res, next) => {
-    console.log('RRRRR', roles)
     if (!roles.includes(req.user.role))
       return next(new AppError('You do not have adequate permisson to perform this action', 403))
     next()

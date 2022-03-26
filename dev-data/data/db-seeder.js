@@ -3,8 +3,8 @@ const mongoose = require('mongoose')
 const colors = require('colors')
 const dotenv = require('dotenv')
 const Tour = require('../../models/tour')
-// const User = require('../../models/userModel')
-// const Review = require('../../models/reviewModel')
+const User = require('../../models/user')
+const Review = require('../../models/review')
 
 dotenv.config({ path: './config.env' })
 
@@ -21,18 +21,20 @@ mongoose.connect(db, {}).then(
 
 // Read data from file
 const tours = JSON.parse(fs.readFileSync(`${__dirname}/tours.json`, 'utf-8'))
-// const users = JSON.parse(fs.readFileSync(`${__dirname}/users.json`, 'utf-8'))
-// const reviews = JSON.parse(fs.readFileSync(`${__dirname}/reviews.json`, 'utf-8'))
+const users = JSON.parse(fs.readFileSync(`${__dirname}/users.json`, 'utf-8'))
+const reviews = JSON.parse(fs.readFileSync(`${__dirname}/reviews.json`, 'utf-8'))
 
 // Import data into db
 const importData = async () => {
   try {
-    const docs = await Tour.create(tours)
-    // await User.create(users, {validateBeforeSave: false})
-    // await Review.create(reviews)
-    console.log(colors.green.bold(`${docs.length} tours created successfully...`))
+    const toursCreated = await Tour.create(tours)
+    console.log(colors.green.bold(`${toursCreated.length} tours created successfully...`))
 
-    // console.log(colors.green.bold('Data uploaded to database successfully...'))
+    const usersCreated = await User.create(users, { validateBeforeSave: false })
+    console.log(colors.green.bold(`${usersCreated.length} users created successfully...`))
+
+    const reviewsCreated = await Review.create(reviews)
+    console.log(colors.green.bold(`${reviewsCreated.length} reviews created successfully...`))
   } catch (error) {
     console.log(error)
   }
@@ -42,10 +44,14 @@ const importData = async () => {
 // Delete all data from db
 const deleteData = async () => {
   try {
-    const deleted = await Tour.deleteMany()
-    // await User.deleteMany()
-    // await Review.deleteMany()
-    console.log(colors.green.bold(`${deleted.deletedCount} tours deleted from the database successfully...`))
+    const deletedTours = await Tour.deleteMany()
+    console.log(colors.green.bold(`${deletedTours.deletedCount} tours deleted from the database successfully...`))
+
+    const deletedUsers = await User.deleteMany()
+    console.log(colors.green.bold(`${deletedUsers.deletedCount} users deleted from the database successfully...`))
+
+    const deletedReviews = await Review.deleteMany()
+    console.log(colors.green.bold(`${deletedReviews.deletedCount} reviews deleted from the database successfully...`))
   } catch (error) {
     console.log(error)
   }

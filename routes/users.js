@@ -1,48 +1,22 @@
 const express = require('express')
+const Model = require('../models/user')
 
-const {
-  updateLoggedInData,
-  // getAllUsers,
-  // createUser,
-  // getUser,
-  // updateUser,
-  // deleteUser,
-  // getMe,
-  // updateMe,
-  // deleteMe,
-  // uploadUserPhoto,
-} = require('../controllers/users')
-const {
-  signup,
-  // login,
-  // forgotPassword,
-  // resetPassword,
-  // updateMyPassword,
-  protect,
-  // restrictTo,
-  // logout,
-} = require('../controllers/auth')
+const { updateLoggedInData, deleteLoggedIn, fetchLoggedIn } = require('../controllers/users')
+
+const { fetchAll, fetchDoc, createDoc, updateDoc, deleteDoc } = require('../controllers/factory')
+const { protect, authorize } = require('../controllers/auth')
 
 const router = express.Router()
 
-router.route('/signup').post(signup)
-// router.route('/login').post(login)
-// router.route('/logout').get(logout)
-// router.route('/forgot-password').post(forgotPassword)
-// router.route('/reset-password/:token').patch(resetPassword)
-
 router.use(protect)
 
-// router.route('/update-my-password').patch(updateMyPassword)
-
-// router.route('/getCurrentUser').get(getCurrentUser, getUser)
-// router.route('/update').patch(uploadUserPhoto, updateMe)
+router.route('/fetchLoggedIn').get(fetchLoggedIn, fetchDoc(Model))
 router.route('/updateLoggedInData').patch(updateLoggedInData)
-// router.route('/delete-me').delete(deleteMe)
+router.route('/deleteLoggedIn').delete(deleteLoggedIn)
 
-// router.use(restrictTo('admin'))
+router.use(authorize('admin'))
 
-// router.route('/').get(getAllUsers).post(createUser)
-// router.route('/:id').get(getUser).patch(updateUser).delete(deleteUser)
+router.route('/').get(fetchAll(Model)).post(createDoc(Model))
+router.route('/:id').get(fetchDoc(Model)).patch(updateDoc(Model)).delete(deleteDoc(Model))
 
 module.exports = router

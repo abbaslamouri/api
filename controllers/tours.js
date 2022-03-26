@@ -1,13 +1,25 @@
 // const fs = require('fs')
-const Model = require('../models/tour.js')
+const Tour = require('../models/tour.js')
 const asyncHandler = require('../utils/asyncHandler')
 // const factory = require('../controllers/factory')
-// const AppError = require('../utils/AppError')
+const AppError = require('../utils/AppError')
 
 exports.checkId = (req, res, next, val) => {
   return console.log(`Tour is id ${val}`)
   next()
 }
+
+// exports.fetchTour = asyncHandler(async (req, res, next) => {
+//   const doc = await Tour.findById(req.params.id).populate({
+//     path: 'guides',
+//     select: 'name email role',
+//   })
+//   if (!doc) return next(new AppError(`We can't find a document with id = ${req.params.id}`, 404))
+//   res.status(200).json({
+//     status: 'succes',
+//     data: doc,
+//   })
+// })
 
 exports.top5Tours = async (req, res, next) => {
   req.query.sort = '-ratingsAverage, price'
@@ -17,7 +29,7 @@ exports.top5Tours = async (req, res, next) => {
 }
 
 exports.getTourStats = asyncHandler(async (req, res, next) => {
-  const stats = await Model.aggregate([
+  const stats = await Tour.aggregate([
     {
       $match: { ratingsAverage: { $gte: 4.5 } },
     },
@@ -45,7 +57,7 @@ exports.getTourStats = asyncHandler(async (req, res, next) => {
 
 exports.getMonthlyPlan = asyncHandler(async (req, res, next) => {
   const year = req.params.year * 1
-  const plan = await Model.aggregate([
+  const plan = await Tour.aggregate([
     {
       $unwind: '$startDates',
     },
@@ -89,52 +101,48 @@ exports.getMonthlyPlan = asyncHandler(async (req, res, next) => {
   })
 })
 
-exports.getToursWithin = asyncHandler(async (req, res, next) => {
-  // const { distance, latlgt, unit } = req.params
-  // const [lat, lgt] = latlgt.split(',')
-  // const radius = unit === 'mi' ? distance / 3963.2 : distance / 6378.1
-  // if (!lat || !lgt)
-  //   return next(new AppError('Latitude and longitude are required.  Please provide comma separated values', 400))
-  // const tours = await Tour.find({
-  //   startLocation: { $geoWithin: { $centerSphere: [[lgt, lat], radius] } },
-  // }).select('name startLocation')
-  // console.log(distance, lgt, lat, unit)
-  // res.status(200).json({
-  //   status: 'success',
-  //   results: tours.length,
-  //   data: {
-  //     data: tours,
-  //   },
-  // })
+exports.fetchToursWithin = asyncHandler(async (req, res, next) => {
+  const { distance, latlgt, unit } = req.params
+  const [lat, lgt] = latlgt.split(',')
+  const radius = unit === 'mi' ? distance / 3963.2 : distance / 6378.1
+  if (!lat || !lgt)
+    return next(new AppError('Latitude and longitude are required.  Please provide comma separated values', 400))
+  const tours = await Tour.find({
+    startLocation: { $geoWithin: { $centerSphere: [[lgt, lat], radius] } },
+  }).select('name startLocation')
+  console.log(distance, lgt, lat, unit)
+  res.status(200).json({
+    status: 'success',
+    results: tours.length,
+    data: tours,
+  })
 })
 
-exports.getDistances = asyncHandler(async (req, res, next) => {
-  // const { latlgt, unit } = req.params
-  // const [lat, lgt] = latlgt.split(',')
-  // if (!lat || !lgt)
-  //   return next(new AppError('Latitude and longitude are required.  Please provide comma separated values', 400))
-  // const distances = await Tour.aggregate([
-  //   {
-  //     $geoNear: {
-  //       near: {
-  //         type: 'Point',
-  //         coordinates: [lgt * 1, lat * 1],
-  //       },
-  //       distanceField: 'distance',
-  //       distanceMultiplier: unit === 'mi' ? 0.0006213 : 0.001,
-  //     },
-  //   },
-  //   {
-  //     $project: {
-  //       name: 1,
-  //       distance: 1,
-  //     },
-  //   },
-  // ])
-  // res.status(200).json({
-  //   status: 'success',
-  //   data: {
-  //     data: distances,
-  //   },
-  // })
+exports.fetchDistances = asyncHandler(async (req, res, next) => {
+  const { latlgt, unit } = req.params
+  const [lat, lgt] = latlgt.split(',')
+  if (!lat || !lgt)
+    return next(new AppError('Latitude and longitude are required.  Please provide comma separated values', 400))
+  const distances = await Tour.aggregate([
+    {
+      $geoNear: {
+        near: {
+          type: 'Point',
+          coordinates: [lgt * 1, lat * 1],
+        },
+        distanceField: 'distance',
+        distanceMultiplier: unit === 'mi' ? 0.0006213 : 0.001,
+      },
+    },
+    {
+      $project: {
+        name: 1,
+        distance: 1,
+      },
+    },
+  ])
+  res.status(200).json({
+    status: 'success',
+    data:distances,
+  })
 })

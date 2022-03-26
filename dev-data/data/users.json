@@ -1,5 +1,14 @@
 [
   {
+    "_id": "5c8a24822f8fb814b56fa192",
+    "name": "Abbas Lamouri",
+    "email": "abbaslamouri@yrlus.com",
+    "role": "admin",
+    "active": true,
+    "photo": "abbas.jpg",
+    "password": "$2a$12$kA2Lv4MqW2pE1no8HXDLq.jliah0U1aKvfGdd8RSQ9cl5AzyEpuPC"
+  },
+  {
     "_id": "5c8a1d5b0190b214360dc057",
     "name": "Jonas Schmedtmann",
     "email": "admin@natours.io",
@@ -160,15 +169,6 @@
     "active": true,
     "photo": "user-18.jpg",
     "password": "$2a$12$uB5H1OxLMOqDYTuTlptAoewlovENJvjrLwzsL1wUZ6OkAIByPPBGq"
-  },
-  {
-    "_id": "5c8a24822f8fb814b56fa192",
-    "name": "John Riley",
-    "email": "john@example.com",
-    "role": "user",
-    "active": true,
-    "photo": "user-19.jpg",
-    "password": "$2a$12$11JElTatQlAFo1Obw/dwd..vuVmQyYS7MT14pkl3lRvVPjGA00G8O"
   },
   {
     "_id": "5c8a24a02f8fb814b56fa193",

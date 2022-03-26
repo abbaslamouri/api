@@ -44,7 +44,7 @@ const SendResponse = async (user, statusCode, res) => {
   })
 }
 
-exports.getCurrentUser = asyncHandler(async (req, res, next) => {
+exports.fetchLoggedIn = asyncHandler(async (req, res, next) => {
   req.params.id = req.user.id
   next()
 })
@@ -68,8 +68,6 @@ exports.getCurrentUser = asyncHandler(async (req, res, next) => {
 // })
 
 exports.updateLoggedInData = asyncHandler(async (req, res, next) => {
-  // console.log('FILE', req.file)
-  // console.log('BODY', req.body)
   if (req.body.password) return next(new AppError('You cannot use this route for passsword updates', 400))
   const filteredBody = filteredObj(req.body, ['name', 'email'])
   // if (req.file) filteredBody.photo = req.file.filename
@@ -78,14 +76,12 @@ exports.updateLoggedInData = asyncHandler(async (req, res, next) => {
     runValidators: true,
   })
   if (!user) return next(new AppError('You must be logged in to change your data', 401))
-
   SendResponse(user, 200, res)
 })
 
-exports.deleteCurrentUser = asyncHandler(async (req, res, next) => {
+exports.deleteLoggedIn = asyncHandler(async (req, res, next) => {
   await Model.findByIdAndUpdate(req.user.id, { active: false })
-
-  createSendData(null, 204, res)
+  SendResponse(null, 200, res)
 })
 
 exports.createUser = asyncHandler(async (req, res, next) => {

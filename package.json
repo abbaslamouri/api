@@ -1,33 +1,40 @@
 {
-	"name": "api",
-	"version": "1.0.0",
-	"description": "",
-	"main": "index.js",
-	"scripts": {
-		"dev": "nodemon server",
-		"build": "NODE_ENV=production nodemon server",
-		"debug": "ndb server.js"
-	},
-	"keywords": [],
-	"author": "",
-	"license": "ISC",
-	"dependencies": {
-		"bcryptjs": "^2.4.3",
-		"colors": "^1.4.0",
-		"cookie-parser": "^1.4.6",
-		"dotenv": "^16.0.0",
-		"express": "^4.17.3",
-		"html-to-text": "^8.1.0",
-		"jsonwebtoken": "^8.5.1",
-		"mongoose": "^6.2.7",
-		"morgan": "^1.10.0",
-		"multer": "^1.4.4",
-		"nodemailer": "^6.7.3",
-		"pug": "^3.0.2",
-		"slugify": "^1.6.5"
-	},
-	"devDependencies": {
-		"ndb": "^1.1.5",
-		"nodemon": "^1.11.1"
-	}
+  "name": "api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon server",
+    "build": "NODE_ENV=production nodemon server",
+    "debug": "ndb server.js",
+    "deleteDbData": "node dev-data/data/db-seeder --delete",
+    "importDbData": "node dev-data/data/db-seeder --import"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "colors": "^1.4.0",
+    "cookie-parser": "^1.4.6",
+    "dotenv": "^16.0.0",
+    "express": "^4.17.3",
+    "express-mongo-sanitize": "^2.2.0",
+    "express-rate-limit": "^6.3.0",
+    "helmet": "^5.0.2",
+    "hpp": "^0.2.3",
+    "html-to-text": "^8.1.0",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^6.2.7",
+    "morgan": "^1.10.0",
+    "multer": "^1.4.4",
+    "nodemailer": "^6.7.3",
+    "pug": "^3.0.2",
+    "slugify": "^1.6.5",
+    "xss-clean": "^0.1.1"
+  },
+  "devDependencies": {
+    "ndb": "^1.1.5",
+    "nodemon": "^1.11.1"
+  }
 }
