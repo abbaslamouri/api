@@ -91,30 +91,30 @@ const schema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    // startLocation: {
-    //   // geoJSON
-    //   type: {
-    //     type: String,
-    //     default: 'Point',
-    //     enum: ['Point'],
-    //   },
-    //   coordinates: [Number],
-    //   address: String,
-    //   Description: String,
-    // },
-    // locations: [
-    //   {
-    //     type: {
-    //       type: String,
-    //       default: 'Point',
-    //       enum: ['Point'],
-    //     },
-    //     coordinates: [Number],
-    //     address: String,
-    //     description: String,
-    //     day: Number,
-    //   },
-    // ],
+    startLocation: {
+      // geoJSON
+      type: {
+        type: String,
+        default: 'Point',
+        enum: ['Point'],
+      },
+      coordinates: [Number],
+      address: String,
+      Description: String,
+    },
+    locations: [
+      {
+        type: {
+          type: String,
+          default: 'Point',
+          enum: ['Point'],
+        },
+        coordinates: [Number],
+        address: String,
+        description: String,
+        day: Number,
+      },
+    ],
     guides: [{ type: mongoose.Schema.ObjectId, ref: 'User' }],
   },
   {
@@ -124,19 +124,20 @@ const schema = new mongoose.Schema(
   }
 )
 
-// schema.index({ price: 1, ratingsAverage: -1 })
-// schema.index({ slug: 1 })
-// schema.index({ startLocation: '2dsphere' })
+schema.index({ price: 1, ratingsAverage: -1 })
+schema.index({ slug: 1 })
+schema.index({ startLocation: '2dsphere' })
 
 // schema.virtual('durationWeeks').get(function () {
 //   return this.duration / 7
 // })
 
-// schema.virtual('reviews', {
-//   ref: 'Review',
-//   foreignField: 'tour',
-//   localField: '_id',
-// })
+// Virtual populate
+schema.virtual('reviews', {
+  ref: 'Review',
+  foreignField: 'tour',
+  localField: '_id',
+})
 
 // Document Middleware, runs only before save() and create()
 schema.pre('save', function (next) {
@@ -171,18 +172,21 @@ schema.post(/^find/, function (docs, next) {
   next()
 })
 
-// schema.pre(/^find/, function (next) {
-//   this.populate({
-//     path: 'guides',
-//     select: '-__v -passwordChangeDate',
-//   })
-//   next()
-// })
-
-// Aggregation Middleware
-schema.pre('aggregate', function (next) {
-  this.pipeline().unshift({ $match: { secretTour: { $ne: true } } })
+schema.pre(/^find/, function (next) {
+  this.populate({
+    path: 'guides',
+    select: 'name email role',
+  }).populate({
+    path: 'reviews',
+    select: 'review rating',
+  })
   next()
 })
+
+// Aggregation Middleware
+// schema.pre('aggregate', function (next) {
+//   this.pipeline().unshift({ $match: { secretTour: { $ne: true } } })
+//   next()
+// })
 
 module.exports = mongoose.model('Tour', schema)

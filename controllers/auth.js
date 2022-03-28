@@ -6,56 +6,22 @@ const AppError = require('../utils/AppError')
 const asyncHandler = require('../utils/asyncHandler')
 const Email = require('../utils/Email')
 
-// const sendTokenResponse = async (res, user = null, expiresIn = null) => {
-//   let auth = null
-//   if (user) {
-//     const token = await user.getSinedJwtToken()
-//     auth = { token, user: { _id: user._id, name: user.name, email: user.email, role: user.role } }
-//   }
-//   const expires = !expiresIn
-//     ? new Date(Date.now() + config.COOKIE_EXPIRE * 24 * 60 * 60 * 1000)
-//     : new Date(Date.now() + expiresIn)
-
-//   setCookie(res, 'auth', JSON.stringify(auth), {
-//     expires,
-//     httpOnly: true,
-//     secure: config.NODE_ENV === 'production' ? true : false,
-//     path: '/',
-//   })
-//   return auth
-// }
-
-// const sendEmail = require('../utils/mail')
-
-// const signToken = async (id) => {
-// 	return promisify(jwt.sign)({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRATION })
-// }
-
 const sendTokenResponse = async (res, statusCode, user) => {
 	let token = null
 	if (user) {
 		token = await user.getSinedJwtToken()
 		auth = { token, user: { _id: user._id, name: user.name, email: user.email, role: user.role } }
 	}
-	const expires = new Date(Date.now() + process.env.JWT_COOKIE_EXPIRESIN * 24 * 60 * 60 * 1000)
-	res.cookie('auth', JSON.stringify(auth), {
-		expires,
-		httpOnly: true,
-		secure: process.env.NODE_ENV === 'production' ? true : false,
-		// path: '/',
-	})
-
-	// const token = await signToken(user._id)
-	// const cookieOptions = {
-	//   expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRATION * 24 * 60 * 60 * 1000),
+	// res.cookie('auth', JSON.stringify(auth), {
+	//   expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000),
 	//   httpOnly: true,
-	// }
-	// if (process.env.NODE_ENV === 'production') cookieOptions.secure = true
-	// res.cookie('jwt', token, cookieOptions)
+	//   secure: process.env.NODE_ENV === 'production' ? true : false,
+	//   // path: '/',
+	// })
 	user.password = undefined
 	res.status(statusCode).json({
 		status: 'success',
-		data: auth,
+		auth,
 	})
 }
 
@@ -67,19 +33,18 @@ exports.signup = asyncHandler(async (req, res, next) => {
 	})
 	const doc = await Model.create(user)
 	if (!doc) return next(new AppError(`We can't create user ${req.body.name}`, 404))
-	const token = await user.createPasswordResetToken()
-	const url = `${req.protocol}//:${req.get('host')}/auth/completeSignup/${token}`
+	const resetToken = await user.createPasswordResetToken()
+	const url = `${req.protocol}//:${req.get('host')}/auth/${process.env.API_BASE}/completeSignup/${resetToken}`
 	await user.save()
 	user.password = undefined
-	await new Email(user, url).sendCompleteSignup()
+	// await new Email(user, url).sendCompleteSignup()
 	res.status(200).json({
 		status: 'success',
-		data: {
-			emailMessage: `Email sent to ${user.email}.  Please follow the link in your email to complete your registration`,
-			url,
-			token,
-		},
+		message: `Email sent to ${user.email}.  Please follow the link in your email to complete your registration.  Submit a PATCH request with email and password to  ${url} to complete the registration`,
+		url,
+		resetToken,
 	})
+
 	// } catch (err) {
 	//   console.log(err)
 	//   user.passwordResetToken = undefined
@@ -118,11 +83,12 @@ exports.completeSignup = asyncHandler(async (req, res, next) => {
 	console.log(user)
 	await user.save()
 	const url = `${process.env.BASE_URL}`
-	await new Email(user, url).sendWelcome()
+	// await new Email(user, url).sendWelcome()
 	return await sendTokenResponse(res, 200, user)
 })
 
 exports.signin = asyncHandler(async (req, res, next) => {
+	console.log('here')
 	const { email, password } = req.body
 	if (!email || !password) return next(new AppError('Email and Password are required', 401))
 	const user = await Model.findOne({ email }).select('+password')
@@ -135,16 +101,18 @@ exports.signin = asyncHandler(async (req, res, next) => {
 	// })
 })
 
-exports.logout = asyncHandler(async (req, res, next) => {
-	// const cookieOptions = {
-	// 	expires: new Date(Date.now() + 1000),
-	// 	httpOnly: true,
-	// }
-	// res.cookie('jwt', '', cookieOptions)
-	// res.status(200).json({
-	// 	status: 'success',
-	// 	data: null,
+exports.signout = asyncHandler(async (req, res, next) => {
+	auth = { token: ' ', user: {} }
+	// res.cookie('auth', JSON.stringify(auth), {
+	//   expires: new Date(Date.now() + 1000),
+	//   httpOnly: true,
+	//   secure: process.env.NODE_ENV === 'production' ? true : false,
+	//   // path: '/',
 	// })
+	res.status(200).json({
+		status: 'success',
+		data: null,
+	})
 })
 
 exports.protect = asyncHandler(async (req, res, next) => {
@@ -166,7 +134,6 @@ exports.protect = asyncHandler(async (req, res, next) => {
 
 exports.authorize = (...roles) =>
 	asyncHandler(async (req, res, next) => {
-		console.log('RRRRR', roles)
 		if (!roles.includes(req.user.role))
 			return next(new AppError('You do not have adequate permisson to perform this action', 403))
 		next()
@@ -189,27 +156,34 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
 	if (!user) return next(new AppError('We cannot find user with this email in our database', 404))
 	const resetToken = await user.createPasswordResetToken()
 	await user.save({ validateBeforeSave: false })
-	const resetUrl = `${req.protocol}//:${req.get('host')}/api/v1/users/resetPassword/${resetToken}`
-	const message = `Forgot your password?  Submit a PATCH request with password and passwordConfirm to: ${resetUrl}.  If you did not forget your password, please ignore this email.`
+	const url = `${req.protocol}//:${req.get('host')}/api/v1/users/resetPassword/${resetToken}`
+	// await new Email(user, url).sendResetPassword()
+	res.status(200).json({
+		status: 'success',
+		user: { name: user.name, email: user, email },
+		message: `Forgot your password?  Submit a PATCH request with password and passwordConfirm to: ${url}.  If you did not submit a request, please ignore this email.`,
+		url,
+		resetToken,
+	})
 
-	try {
-		await sendEmail({
-			to: user.email,
-			subject: 'Your password reset token (valid for 10 minutes)',
-			text: message,
-		})
-		createSendToken({}, 200, res)
+	// try {
+	// await sendEmail({
+	//   to: user.email,
+	//   subject: 'Your password reset token (valid for 10 minutes)',
+	//   text: message,
+	// })
+	// createSendToken(user, 200, res)
 
-		// res.status(200).json({
-		//   status: 'success',
-		//   message: 'Check your email for a password reset token',
-		// })
-	} catch (error) {
-		user.passwordResetToken = undefined
-		user.passwordResetExpires = undefined
-		await user.save({ validateBeforeSave: false })
-		return next(new AppError('There was an error sending the message, please try agian later', 500))
-	}
+	// res.status(200).json({
+	//   status: 'success',
+	//   message: 'Check your email for a password reset token',
+	// })
+	// } catch (error) {
+	//   user.passwordResetToken = undefined
+	//   user.passwordResetExpires = undefined
+	//   await user.save({ validateBeforeSave: false })
+	//   return next(new AppError('There was an error sending the message, please try agian later', 500))
+	// }
 })
 
 exports.resetPassword = asyncHandler(async (req, res, next) => {
@@ -217,26 +191,27 @@ exports.resetPassword = asyncHandler(async (req, res, next) => {
 	const user = await Model.findOne({ passwordResetToken: hashedToken, passwordResetExpires: { $gt: Date.now() } })
 	if (!user) return next(new AppError('Token is invlaid or has expired', 400))
 	user.password = req.body.password
-	user.passwordConfirm = req.body.passwordConfirm
+	// user.passwordConfirm = req.body.passwordConfirm
 	user.passwordResetToken = undefined
 	user.passwordResetExpires = undefined
 	await user.save()
-	createSendToken(user, 200, res)
+	sendTokenResponse(res, 200, user)
 	// res.status(200).json({
 	//   status: 'success',
 	//   token: await signToken(user._id),
 	// })
 })
 
-exports.updateMyPassword = asyncHandler(async (req, res, next) => {
-	// const user = await User.findById({ _id: req.user._id }).select('+password')
-	// if (!user) return next(new AppError('You must be logged in to change your password', 401))
-	// if (!(await user.checkPassword(req.body.currentPassword, user.password)))
-	// 	return next(new AppError('Invalid current password', 401))
-	// user.password = req.body.password
+exports.updateLoggedInPassword = asyncHandler(async (req, res, next) => {
+	console.log(req.user)
+	const user = await Model.findById(req.user.id).select('+password')
+	if (!user) return next(new AppError('You must be logged in to change your password', 401))
+	if (!(await user.checkPassword(req.body.currentPassword, user.password)))
+		return next(new AppError('Invalid current password', 401))
+	user.password = req.body.password
 	// user.passwordConfirm = req.body.passwordConfirm
-	// await user.save()
-	// createSendToken(user, 200, res)
+	await user.save()
+	sendTokenResponse(res, 200, user)
 	// res.status(201).json({
 	//   status: 'success',
 	//   token: await signToken(user._id),
