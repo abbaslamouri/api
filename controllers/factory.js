@@ -18,8 +18,8 @@ exports.fetchAll = (Model) =>
     // const docs = await features.query.explain()
     res.status(200).json({
       status: 'succes',
-      results: docs.length,
-      data: docs,
+      count: docs.length,
+      docs,
     })
   })
 
@@ -29,7 +29,7 @@ exports.fetchDoc = (Model, populateOptions = {}) =>
     if (!doc) return next(new AppError(`We can't find a document with id = ${req.params.id}`, 404))
     res.status(200).json({
       status: 'succes',
-      data: doc,
+      doc,
     })
     // let query = Model.findById(req.params.id)
     // if (populateOptions) query.populate(populateOptions)
@@ -47,7 +47,7 @@ exports.deleteDoc = (Model) =>
     if (!doc) return next(new AppError(`We can't find a document with id = ${req.params.id}`, 404))
     res.status(204).json({
       status: 'success',
-      data: doc,
+      doc,
     })
   })
 
@@ -60,7 +60,7 @@ exports.updateDoc = (Model) =>
     if (!doc) return next(new AppError(`We can't find a document with id = ${req.params.id}`, 404))
     res.status(200).json({
       status: 'success',
-      data: doc,
+      doc,
     })
   })
 
@@ -70,6 +70,6 @@ exports.createDoc = (Model) =>
     if (!doc) return next(new AppError(`We can't create document ${req.body.name}`, 404))
     res.status(201).json({
       status: 'success',
-      data: doc,
+      doc,
     })
   })

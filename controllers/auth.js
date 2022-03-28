@@ -12,16 +12,16 @@ const sendTokenResponse = async (res, statusCode, user) => {
     token = await user.getSinedJwtToken()
     auth = { token, user: { _id: user._id, name: user.name, email: user.email, role: user.role } }
   }
-  res.cookie('auth', JSON.stringify(auth), {
-    expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000),
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production' ? true : false,
-    // path: '/',
-  })
+  // res.cookie('auth', JSON.stringify(auth), {
+  //   expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000),
+  //   httpOnly: true,
+  //   secure: process.env.NODE_ENV === 'production' ? true : false,
+  //   // path: '/',
+  // })
   user.password = undefined
   res.status(statusCode).json({
     status: 'success',
-    data: auth,
+    auth,
   })
 }
 
@@ -34,17 +34,15 @@ exports.signup = asyncHandler(async (req, res, next) => {
   const doc = await Model.create(user)
   if (!doc) return next(new AppError(`We can't create user ${req.body.name}`, 404))
   const resetToken = await user.createPasswordResetToken()
-  const url = `${req.protocol}//:${req.get('host')}/auth/completeSignup/${resetToken}`
+  const url = `${req.protocol}//:${req.get('host')}/auth/${process.env.API_BASE}/completeSignup/${resetToken}`
   await user.save()
   user.password = undefined
-  await new Email(user, url).sendCompleteSignup()
+  // await new Email(user, url).sendCompleteSignup()
   res.status(200).json({
     status: 'success',
-    data: {
-      message: `Email sent to ${user.email}.  Please follow the link in your email to complete your registration.  Submit a PATCH request with email and password to  ${url} to complete the registration`,
-      url,
-      resetToken,
-    },
+    message: `Email sent to ${user.email}.  Please follow the link in your email to complete your registration.  Submit a PATCH request with email and password to  ${url} to complete the registration`,
+    url,
+    resetToken,
   })
 
   // } catch (err) {
@@ -85,11 +83,12 @@ exports.completeSignup = asyncHandler(async (req, res, next) => {
   console.log(user)
   await user.save()
   const url = `${process.env.BASE_URL}`
-  await new Email(user, url).sendWelcome()
+  // await new Email(user, url).sendWelcome()
   return await sendTokenResponse(res, 200, user)
 })
 
 exports.signin = asyncHandler(async (req, res, next) => {
+  console.log('here')
   const { email, password } = req.body
   if (!email || !password) return next(new AppError('Email and Password are required', 401))
   const user = await Model.findOne({ email }).select('+password')
@@ -104,15 +103,15 @@ exports.signin = asyncHandler(async (req, res, next) => {
 
 exports.signout = asyncHandler(async (req, res, next) => {
   auth = { token: ' ', user: {} }
-  res.cookie('auth', JSON.stringify(auth), {
-    expires: new Date(Date.now() + 1000),
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production' ? true : false,
-    // path: '/',
-  })
+  // res.cookie('auth', JSON.stringify(auth), {
+  //   expires: new Date(Date.now() + 1000),
+  //   httpOnly: true,
+  //   secure: process.env.NODE_ENV === 'production' ? true : false,
+  //   // path: '/',
+  // })
   res.status(200).json({
     status: 'success',
-    data: auth,
+    data: null,
   })
 })
 
@@ -158,7 +157,7 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
   const resetToken = await user.createPasswordResetToken()
   await user.save({ validateBeforeSave: false })
   const url = `${req.protocol}//:${req.get('host')}/api/v1/users/resetPassword/${resetToken}`
-  await new Email(user, url).sendResetPassword()
+  // await new Email(user, url).sendResetPassword()
   res.status(200).json({
     status: 'success',
     data: {
