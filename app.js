@@ -27,7 +27,11 @@ app.use(helmet())
 
 app.use(express.json({ limit: '1000kb' }))
 app.use(express.urlencoded({ extended: true }))
-app.use(fileUpload())
+app.use(
+  fileUpload({
+    limits: 2 * 1024 * 1024,
+  })
+)
 
 app.use(express.static(path.join(__dirname, 'public')))
 
