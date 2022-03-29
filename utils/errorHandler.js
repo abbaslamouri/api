@@ -17,6 +17,7 @@ const sendError = (res, error) => {
   } else if (process.env.NODE_ENV === 'development') {
     res.status(error.statusCode || 500).json({
       error,
+      errorCode: error.errorCode,
       status: error.status,
       message: error.message ? error.message.split(',').join('<br>') || 'Server error' : '',
       stack: error.stack,
@@ -40,7 +41,8 @@ module.exports = (err, req, res, next) => {
       `${
         field[0].toUpperCase() + field.substring(1)
       } must be unique.  A document with ${field} = ${fieldValue} exists in the database`,
-      400
+      400,
+      'not-unique'
     )
   } else if (err.name === 'ValidationError') {
     error = new AppError(

@@ -13,12 +13,18 @@ exports.fetchAll = (Model) =>
     // To allow for nested GET reviews on tour
     // let filter = {}
     // if (req.params.tourId) filter = { tour: req.params.tourId }
-    const features = new APIFeatures(Model.find(), req.query).filter().sort().fields().paginate()
+    let features = null
+    let totalCount = null
+    features = new APIFeatures(Model.find(), req.query).filter().sort().fields().search()
+    totalCount = (await features.query).length
+
+    features = new APIFeatures(Model.find(), req.query).filter().sort().fields().search().paginate()
     const docs = await features.query
     // const docs = await features.query.explain()
     res.status(200).json({
       status: 'succes',
-      count: docs.length,
+      totalCount,
+      // count: docs.length,
       docs,
     })
   })
