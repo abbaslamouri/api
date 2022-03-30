@@ -17,7 +17,6 @@ exports.fetchAll = (Model) =>
     let totalCount = null
     features = new APIFeatures(Model.find(), req.query).filter().sort().fields().search()
     totalCount = (await features.query).length
-
     features = new APIFeatures(Model.find(), req.query).filter().sort().fields().search().paginate()
     const docs = await features.query
     // const docs = await features.query.explain()

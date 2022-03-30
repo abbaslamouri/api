@@ -20,8 +20,8 @@ class ApiFeatures {
   search() {
     if (this.queryObj.keyword) {
       const regex = new RegExp(this.queryObj.keyword, 'i')
-      this.query = this.query.or({ $text: { $search: this.queryObj.keyword } })
-      // this.query = this.query.or([{ name: { $regex: regex } }, { mimetype: { $regex: regex } }])
+      // this.query = this.query.or({ $text: { $search: this.queryObj.keyword } })
+      this.query = this.query.or([{ name: { $regex: regex } }, { mimetype: { $regex: regex } }])
     }
     return this
   }

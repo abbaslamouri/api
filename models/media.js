@@ -59,7 +59,7 @@ const schema = new mongoose.Schema(
   }
 )
 
-// schema.index({ name: 'text', mimetype: 'text' })
+// schema.index({ name: 'text', path: 'text' })
 
 // // Document Middleware, runs before save() and create()
 // schema.pre('save', async function (next) {
