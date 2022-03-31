@@ -10,20 +10,13 @@ exports.checkId = (req, res, next, val) => {
 
 exports.fetchAll = (Model) =>
   asyncHandler(async (req, res, next) => {
-    // To allow for nested GET reviews on tour
-    // let filter = {}
-    // if (req.params.tourId) filter = { tour: req.params.tourId }
-    let features = null
-    let totalCount = null
-    features = new APIFeatures(Model.find(), req.query).filter().sort().fields().search()
-    totalCount = (await features.query).length
-    features = new APIFeatures(Model.find(), req.query).filter().sort().fields().search().paginate()
+    const totalCount = await Model.countDocuments()
+    const features = new APIFeatures(Model.find(), req.query).filter().sort().fields().search().paginate()
     const docs = await features.query
     // const docs = await features.query.explain()
     res.status(200).json({
       status: 'succes',
       totalCount,
-      // count: docs.length,
       docs,
     })
   })

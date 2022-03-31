@@ -12,6 +12,10 @@ const schema = new mongoose.Schema(
       type: String,
       unique: true,
     },
+    sortOrder: {
+      type: Number,
+      default: 0,
+    },
   },
   {
     timestamps: true,
