@@ -18,6 +18,7 @@ const userRouter = require('./routes/users')
 const reviewRouter = require('./routes/reviews')
 const mediaRouter = require('./routes/media')
 const categoryRouter = require('./routes/categories')
+const productRouter = require('./routes/products')
 const attributeRouter = require('./routes/attributes')
 const attributetermRouter = require('./routes/attributeterms')
 
@@ -32,17 +33,19 @@ app.use(helmet())
 app.use(express.json({ limit: '1000kb' }))
 app.use(express.urlencoded({ extended: true }))
 app.use(
-	fileUpload({
-		limits: 2 * 1024 * 1024,
-	})
+  fileUpload({
+    limits: 2 * 1024 * 1024,
+  })
 )
 
 app.use(express.static(path.join(__dirname, 'public')))
 
+app.use(cookieParser())
+
 if (process.env.NODE_ENV == 'development') app.use(morgan('dev'))
 app.use((req, res, next) => {
-	req.requestTime = new Date().toISOString()
-	next()
+  req.requestTime = new Date().toISOString()
+  next()
 })
 
 // Data sanitization against noSQL query injection
@@ -55,13 +58,11 @@ app.use(xss())
 app.use(hpp({ whitelist: ['duration', 'ratingsAverage', 'ratingsQuantity', 'maxGroupSize', 'price', 'difficulty'] })) // <- THIS IS THE NEW LINE
 
 const limitter = rateLimit({
-	windowMs: 60 * 60 * 1000, // 1 hour
-	max: 100000, // limit each IP to 100 requests per windowMs
-	message: 'Too many attempts from this IP, please try again after an hour',
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 100000, // limit each IP to 100 requests per windowMs
+  message: 'Too many attempts from this IP, please try again after an hour',
 })
 app.use('/api', limitter)
-
-app.use(cookieParser())
 
 // app.use((req, res, next) => {
 //   req.requestTime = new Date().toISOString()
@@ -76,11 +77,12 @@ app.use('/api/v1/users', userRouter)
 app.use('/api/v1/reviews', reviewRouter)
 app.use('/api/v1/media', mediaRouter)
 app.use('/api/v1/categories', categoryRouter)
+app.use('/api/v1/products', productRouter)
 app.use('/api/v1/attributes', attributeRouter)
-app.use('/api/v1/atributeterms', attributetermRouter)
+app.use('/api/v1/attributeterms', attributetermRouter)
 
 app.all('*', (req, res, next) => {
-	next(new AppError(`Can't find ${req.originalUrl} on this server`, 404))
+  next(new AppError(`Can't find ${req.originalUrl} on this server`, 404))
 })
 
 app.use(errorHandler)

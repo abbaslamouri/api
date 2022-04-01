@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+const slugify = require('slugify')
 
 const schema = new mongoose.Schema(
   {
@@ -27,6 +28,12 @@ const schema = new mongoose.Schema(
     toObject: { virtuals: true },
   }
 )
+
+// Document Middleware, runs only before save() and create()
+schema.pre('save', function (next) {
+  this.slug = slugify(this.name, { lower: true })
+  next()
+})
 
 // Virtual populate
 schema.virtual('attributeterms', {

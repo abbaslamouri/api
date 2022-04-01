@@ -10,6 +10,7 @@ exports.checkId = (req, res, next, val) => {
 
 exports.fetchAll = (Model) =>
   asyncHandler(async (req, res, next) => {
+    // return next(new AppError(`We can't find a document with`, 404))
     const totalCount = await Model.countDocuments()
     const features = new APIFeatures(Model.find(), req.query).filter().sort().fields().search().paginate()
     const docs = await features.query
@@ -49,6 +50,17 @@ exports.deleteDoc = (Model) =>
     })
   })
 
+exports.deleteDocs = (Model) =>
+  asyncHandler(async (req, res, next) => {
+    console.log('DELETEDOCS')
+    const result = await Model.deleteMany(req.body)
+    if (!result) return next(new AppError(`We are not able to delete documents`, 404))
+    res.status(200).json({
+      ...result,
+      status: 'success',
+    })
+  })
+
 exports.updateDoc = (Model) =>
   asyncHandler(async (req, res, next) => {
     const doc = await Model.findByIdAndUpdate(req.params.id, req.body, {
@@ -64,6 +76,7 @@ exports.updateDoc = (Model) =>
 
 exports.createDoc = (Model) =>
   asyncHandler(async (req, res, next) => {
+    console.log('CRREATING', req.body)
     const doc = await Model.create(req.body)
     if (!doc) return next(new AppError(`We can't create document ${req.body.name}`, 404))
     res.status(201).json({

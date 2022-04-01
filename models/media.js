@@ -1,4 +1,6 @@
 const mongoose = require('mongoose')
+const slugify = require('slugify')
+
 // const Folder = require('../models/folder')
 
 const schema = new mongoose.Schema(

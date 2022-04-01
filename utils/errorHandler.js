@@ -15,7 +15,8 @@ const sendError = (res, error) => {
       })
     }
   } else if (process.env.NODE_ENV === 'development') {
-    res.status(error.statusCode || 500).json({
+    console.log('VVVVVVV', error)
+    res.status(200).json({
       error,
       errorCode: error.errorCode,
       status: error.status,
@@ -28,6 +29,7 @@ const sendError = (res, error) => {
 module.exports = (err, req, res, next) => {
   // console.log(colors.red.bold('ERRRRRR', err.message))
   // console.log(colors.red.bold('STACK', err.stack))
+  // res.status(500).json('error', { error: err })
 
   let error = {}
   // console.log('AAAAAAA', typeof err, object)
