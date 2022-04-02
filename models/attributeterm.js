@@ -19,7 +19,7 @@ const schema = new mongoose.Schema(
     parent: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Attribute',
-      required: [true, 'Attribute term parent is required'],
+      // required: [true, 'Attribute term parent is required'],
     },
   },
 

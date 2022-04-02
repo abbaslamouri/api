@@ -4,24 +4,8 @@ const mongoose = require('mongoose')
 
 const schema = new mongoose.Schema(
   {
-    // // name: {
-    // //   type: String,
-    // //   required: [true, 'File Name is required'],
-    // //   maxlength: [50, 'Name cannot be more than 100 characters long'],
-    // //   trim: true,
-    // // },
-    // // slug: {
-    // //   type: String,
-    // //   unique: true,
-    // //   lowercase: true,
-    // // },
-    // customSlug: {
-    //   type: String,
-    //   unique: true,
-    //   lowercase: true,
-    // },
-    product: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
-    attrTerms: [{ type: mongoose.Schema.Types.ObjectId, ref: "Attributeterm" }],
+    product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
+    attrTerms: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Attributeterm' }],
     enabled: {
       type: Boolean,
       default: true,
@@ -126,7 +110,15 @@ const schema = new mongoose.Schema(
   }
 )
 
-schema.index({ name: 'text', slug: 'text' })
+// schema.index({ name: 'text', slug: 'text' })
+
+schema.pre(/^find/, function (next) {
+  this.populate({
+    path: 'gallery',
+    select: 'name slug path url mimetype',
+  })
+  next()
+})
 
 // schema.virtual('averageRating').get(function () {
 //   if (!this.ratings) return

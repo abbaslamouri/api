@@ -170,6 +170,12 @@ const schema = new mongoose.Schema(
   }
 )
 
+schema.virtual('variants', {
+  ref: 'Variant',
+  foreignField: 'product',
+  localField: '_id',
+})
+
 // Document Middleware, runs only before save() and create()
 schema.pre('save', function (next) {
   this.slug = slugify(this.name, { lower: true })
@@ -177,13 +183,15 @@ schema.pre('save', function (next) {
   next()
 })
 
-// schema.pre(/^find/, function (next) {
-//   console.log('FIND')
-//   this.populate({
-//     path: 'gallery',
-//     select: 'name slug path url mimetype',
-//   })
-//   next()
-// })
+schema.pre(/^find/, function (next) {
+  this.populate({
+    path: 'gallery',
+    select: 'name slug path url mimetype',
+  }).populate({
+    path: 'variants',
+    select: '-createdAt',
+  })
+  next()
+})
 
 module.exports = mongoose.model('Product', schema)
