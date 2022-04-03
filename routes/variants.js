@@ -1,5 +1,5 @@
 const express = require('express')
-const { fetchAll, createDoc, updateDoc, deleteDoc } = require('../controllers/factory')
+const { fetchAll, createDoc, updateDoc, deleteDoc, deleteDocs } = require('../controllers/factory')
 const { setProductAuthor } = require('../controllers/products')
 const { protect, authorize } = require('../controllers/auth')
 
@@ -12,6 +12,7 @@ router.route('/').get(fetchAll(Model))
 router.use(protect)
 router.use(authorize('admin'))
 
+router.route('/deleteMany').delete(deleteDocs(Model))
 router.route('/').post(setProductAuthor, createDoc(Model))
 router.route('/:id').delete(deleteDoc(Model))
 router.route('/:id').patch(setProductAuthor, updateDoc(Model))

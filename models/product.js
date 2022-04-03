@@ -185,6 +185,11 @@ schema.pre('save', function (next) {
 
 schema.pre(/^find/, function (next) {
   this.populate({
+    path: 'categories',
+    model: 'Category',
+    select: 'name slug permalink',
+  })
+  this.populate({
     path: 'gallery',
     model: 'Media',
     select: 'name slug path url mimetype',
