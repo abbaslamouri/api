@@ -116,6 +116,9 @@ schema.pre(/^find/, function (next) {
   this.populate({
     path: 'gallery',
     select: 'name slug path url mimetype',
+  }).populate({
+    path: 'attrTerms',
+    select: '-createdAt',
   })
   next()
 })

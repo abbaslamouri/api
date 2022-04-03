@@ -186,11 +186,34 @@ schema.pre('save', function (next) {
 schema.pre(/^find/, function (next) {
   this.populate({
     path: 'gallery',
+    model: 'Media',
     select: 'name slug path url mimetype',
-  }).populate({
-    path: 'variants',
-    select: '-createdAt',
   })
+    .populate({
+      path: 'variants',
+      model: 'Variant',
+      select: '-createdAt',
+    })
+    // .populate({
+    //   path: 'attributes',
+    //   model: 'Attribute',
+    //   select: '-createdAt',
+    // })
+    .populate({
+      path: 'attributes.attribute',
+      model: 'Attribute',
+      select: '-createdAt',
+    })
+    .populate({
+      path: 'attributes.terms',
+      model: 'Attributeterm',
+      select: '-createdAt',
+    })
+    .populate({
+      path: 'attributes.defaultTerm',
+      model: 'Attributeterm',
+      select: '-createdAt',
+    })
   next()
 })
 

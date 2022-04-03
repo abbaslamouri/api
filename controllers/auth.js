@@ -95,7 +95,6 @@ exports.completeSignup = asyncHandler(async (req, res, next) => {
 })
 
 exports.signin = asyncHandler(async (req, res, next) => {
-  console.log('here')
   const { email, password } = req.body
   if (!email || !password) return next(new AppError('Email and Password are required', 401))
   const user = await Model.findOne({ email }).select('+password')
@@ -123,14 +122,13 @@ exports.signout = asyncHandler(async (req, res, next) => {
 })
 
 exports.protect = asyncHandler(async (req, res, next) => {
-  console.log('RC', req.headers.authorization)
   let token = ''
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     token = req.headers.authorization.split(' ')[1]
   } else if (req.cookies && req.cookies.jwt) {
     token = req.cookies.jwt
   }
-  if (!token) return next(new AppError('You are not allowed to access these resources, please loginxxxx', 401))
+  if (!token) return next(new AppError('You are not allowed to access these resources, please login', 401))
   const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET)
   const decodedUser = await Model.findById(decoded.id)
 
