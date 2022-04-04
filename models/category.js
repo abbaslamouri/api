@@ -16,17 +16,15 @@ const schema = new mongoose.Schema(
       type: String,
       unique: true,
       lowercase: true,
-      required: [true, 'Category Slug is required'],
-      minlength: [3, 'Slug too short'],
-      maxlength: [100, 'Slug too long'],
+      // minlength: [3, 'Slug too short'],
+      // maxlength: [100, 'Slug too long'],
     },
     permalink: {
       type: String,
       unique: true,
       lowercase: true,
-      required: [true, 'Category Permalink is required'],
-      minlength: [3, 'Permalink too short'],
-      maxlength: [100, 'Permalink too long'],
+      // minlength: [3, 'Permalink too short'],
+      // maxlength: [100, 'Permalink too long'],
     },
     description: {
       type: String,
@@ -46,7 +44,9 @@ const schema = new mongoose.Schema(
 
 // Document Middleware, runs only before save() and create()
 schema.pre('save', function (next) {
-  this.slug = slugify(this.name, { lower: true })
+  // this.slug = slugify(this.name, { lower: true })
+  // console.log('THIS', this)
+  // this.permalink = this.permalink ? this.permalink : slugify(this.name, { lower: true })
   next()
 })
 
