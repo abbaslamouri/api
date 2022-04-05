@@ -1,44 +1,49 @@
-import mongoose from 'mongoose'
-// import Product from '~/server/models/product'
-// import User from '~/server/models/user'
-// import Coupon from '~/server/models/coupon'
+const mongoose = require('mongoose')
 
 const schema = new mongoose.Schema(
-  {
-    items: [
-      {
-        product: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: 'Product',
-          required: [true, 'A product is required to save cart in the database'],
-        },
-        variant: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: 'Variant',
-        },
-        quantity: Number,
-        price: Number,
-        salePrice: Number,
-        productType: String,
-      },
-    ],
-    customer: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-
-    // customer: Object,
-    // type: mongoose.Schema.Types.ObjectId,
-    // ref: 'User',
-    // required: [true, 'A Customer is required to save cart in the database'],
-    paymentMethod: String,
-    cartTotal: Number,
-    discount: Number,
-    coupons: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Coupon' }],
-  },
-  {
-    timestamps: true,
-  }
+	{
+		name: {
+			type: String,
+			trim: true,
+			required: [true, 'Coupon Name is required'],
+			minlength: [3, 'Too short'],
+			maxlength: [20, 'Too long'],
+			unique: true,
+			uppercase: true,
+		},
+		slug: {
+			type: String,
+			unique: true,
+			lowercase: true,
+			index: true,
+		},
+		description: {
+			type: String,
+			index: true,
+			maxlength: [2000, 'Too long'],
+		},
+		expiry: {
+			type: Date,
+		},
+		amount: {
+			type: Number,
+			required: [true, 'Coupon Name is required'],
+		},
+		type: {
+			type: String,
+			enum: ['dollar', 'percent'],
+			default: 'percent',
+		},
+		freeShipping: {
+			type: Boolean,
+			default: false,
+		},
+		products: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
+	},
+	{
+		timestamps: true,
+	}
 )
-
-// schema.index({ name: 'text', slug: 'text' })
 
 // Document Middleware, runs before save() and create()
 // schema.pre('save', function (next) {
@@ -85,4 +90,4 @@ const schema = new mongoose.Schema(
 //   return false
 // }
 
-export default mongoose.model('Cart', schema)
+module.exports = mongoose.model('Coupon', schema)
