@@ -84,5 +84,3 @@ exports.createDoc = (Model) =>
       doc,
     })
   })
-
-

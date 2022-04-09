@@ -77,6 +77,7 @@ exports.signup = asyncHandler(async (req, res, next) => {
 })
 
 exports.completeSignup = asyncHandler(async (req, res, next) => {
+  console.log('RPT', req.params.token)
   const hashedToken = await crypto.createHash('sha256').update(req.params.token).digest('hex')
   const user = await Model.findOne({
     passwordResetToken: hashedToken,

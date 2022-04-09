@@ -23,6 +23,8 @@ const variantRouter = require('./routes/variants')
 const attributeRouter = require('./routes/attributes')
 const attributetermRouter = require('./routes/attributeterms')
 const orderRouter = require('./routes/orders')
+const countryRouter = require('./routes/countries')
+const stateRouter = require('./routes/states')
 
 const app = express()
 app.use(cors())
@@ -35,9 +37,9 @@ app.use(helmet())
 app.use(express.json({ limit: '1000kb' }))
 app.use(express.urlencoded({ extended: true }))
 app.use(
-	fileUpload({
-		limits: 2 * 1024 * 1024,
-	})
+  fileUpload({
+    limits: 2 * 1024 * 1024,
+  })
 )
 
 app.use(express.static(path.join(__dirname, 'public')))
@@ -46,8 +48,8 @@ app.use(cookieParser())
 
 if (process.env.NODE_ENV == 'development') app.use(morgan('dev'))
 app.use((req, res, next) => {
-	req.requestTime = new Date().toISOString()
-	next()
+  req.requestTime = new Date().toISOString()
+  next()
 })
 
 // Data sanitization against noSQL query injection
@@ -60,9 +62,9 @@ app.use(xss())
 app.use(hpp({ whitelist: ['duration', 'ratingsAverage', 'ratingsQuantity', 'maxGroupSize', 'price', 'difficulty'] })) // <- THIS IS THE NEW LINE
 
 const limitter = rateLimit({
-	windowMs: 60 * 60 * 1000, // 1 hour
-	max: 100000, // limit each IP to 100 requests per windowMs
-	message: 'Too many attempts from this IP, please try again after an hour',
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 100000, // limit each IP to 100 requests per windowMs
+  message: 'Too many attempts from this IP, please try again after an hour',
 })
 app.use('/api', limitter)
 
@@ -84,9 +86,11 @@ app.use('/api/v1/variants', variantRouter)
 app.use('/api/v1/attributes', attributeRouter)
 app.use('/api/v1/attributeterms', attributetermRouter)
 app.use('/api/v1/orders', orderRouter)
+app.use('/api/v1/countries', countryRouter)
+app.use('/api/v1/states', stateRouter)
 
 app.all('*', (req, res, next) => {
-	next(new AppError(`Can't find ${req.originalUrl} on this server`, 404))
+  next(new AppError(`Can't find ${req.originalUrl} on this server`, 404))
 })
 
 app.use(errorHandler)
