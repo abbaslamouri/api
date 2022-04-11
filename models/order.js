@@ -1,84 +1,85 @@
 const mongoose = require('mongoose')
 
 const schema = new mongoose.Schema(
-	{
-		state: {
-			type: String,
-			default: 'cart',
-			enum: {
-				values: ['cart', 'order'],
-				message: ' state must be either `cart` or `order`',
-			},
-		},
-		items: [
-			{
-				product: {
-					type: mongoose.Schema.Types.ObjectId,
-					ref: 'Product',
-					required: [true, 'A product is required to save cart in the database'],
-				},
-				variant: {
-					type: mongoose.Schema.Types.ObjectId,
-					ref: 'Variant',
-				},
-				name: String,
-				quantity: Number,
-				price: Number,
-				salePrice: Number,
-				productType: String,
-			},
-		],
-		customer: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-		discount: Number,
-		coupons: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Coupon' }],
-		paymentMethod: {
-			type: String,
-			required: [true, 'Payment method is required'],
-		},
-		paymentResults: {
-			id: { type: String },
-			status: { type: String },
-			update_time: { type: String },
-			email: { type: String },
-		},
-		subTotal: {
-			type: Number,
-			required: [true, 'Total required'],
-			default: 0.0,
-		},
-		shipping: {
-			type: Number,
-			required: [true, 'Taxes required'],
-			default: 0.0,
-		},
-		taxes: {
-			type: Number,
-			required: [true, 'Taxes required'],
-			default: 0.0,
-		},
-		total: {
-			type: Number,
-			required: [true, 'Total required'],
-			default: 0.0,
-		},
-		paid: {
-			type: Boolean,
-			default: false,
-		},
-		delivered: {
-			type: Boolean,
-			default: false,
-		},
-		datePaid: {
-			type: Date,
-		},
-		dateDelivered: {
-			type: Date,
-		},
-	},
-	{
-		timestamps: true,
-	}
+  {
+    state: {
+      type: String,
+      default: 'cart',
+      enum: {
+        values: ['cart', 'order'],
+        message: ' state must be either `cart` or `order`',
+      },
+    },
+    items: [
+      {
+        product: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Product',
+          required: [true, 'A product is required to save cart in the database'],
+        },
+        variant: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Variant',
+        },
+        name: String,
+        quantity: Number,
+        price: Number,
+        salePrice: Number,
+        productType: String,
+      },
+    ],
+    customer: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    discount: Number,
+    coupons: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Coupon' }],
+    paymentMethod: {
+      type: String,
+      required: [true, 'Payment method is required'],
+    },
+    paymentResults: {
+      id: { type: String },
+      status: { type: String },
+      update_time: { type: String },
+      email: { type: String },
+    },
+    subTotal: {
+      type: Number,
+      required: [true, 'Total required'],
+      default: 0.0,
+    },
+    shipping: {
+      type: Number,
+      required: [true, 'Taxes required'],
+      default: 0.0,
+    },
+    taxes: {
+      type: Number,
+      required: [true, 'Taxes required'],
+      default: 0.0,
+    },
+    total: {
+      type: Number,
+      required: [true, 'Total required'],
+      default: 0.0,
+    },
+    status: {
+      type: String,
+      enum: ['pending', 'processing', 'failed', 'completed'],
+      default: 'pending',
+    },
+    // delivered: {
+    // 	type: Boolean,
+    // 	default: false,
+    // },
+    // datePaid: {
+    // 	type: Date,
+    // },
+    // dateDelivered: {
+    // 	type: Date,
+    // },
+  },
+  {
+    timestamps: true,
+  }
 )
 
 // schema.index({ name: 'text', slug: 'text' })

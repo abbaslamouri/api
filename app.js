@@ -7,7 +7,7 @@ const xss = require('xss-clean')
 const cors = require('cors')
 const hpp = require('hpp')
 const morgan = require('morgan')
-const cookieParser = require('cookie-parser')
+// const cookieParser = require('cookie-parser')
 const fileUpload = require('express-fileupload')
 const AppError = require('./utils/AppError')
 const errorHandler = require('./utils/errorHandler')
@@ -44,7 +44,7 @@ app.use(
 
 app.use(express.static(path.join(__dirname, 'public')))
 
-app.use(cookieParser())
+// app.use(cookieParser())
 
 if (process.env.NODE_ENV == 'development') app.use(morgan('dev'))
 app.use((req, res, next) => {
