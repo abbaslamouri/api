@@ -1,0 +1,6 @@
+{
+  "include": ["server.ts", "app.js"],
+  "ts-node": { "transpileOnly": true },
+  "extends": "@tsconfig/node16/tsconfig.json",
+  "compilerOptions": { "noImplicitAny": true }
+}

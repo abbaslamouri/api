@@ -10,6 +10,13 @@ exports.checkId = (req, res, next, val) => {
 
 exports.fetchAll = (Model) =>
   asyncHandler(async (req, res, next) => {
+    // console.log('SESSION', req.session)
+    // req.session.xyz=25
+    // if (req.session.views) {
+    //   req.session.views = req.session.views + 1
+    // } else {
+    //   req.session.views = 1
+    // }
     // return next(new AppError(`We can't find a document with`, 404))
     const totalCount = await Model.countDocuments()
     const features = new APIFeatures(Model.find(), req.query).filter().sort().fields().search().paginate()

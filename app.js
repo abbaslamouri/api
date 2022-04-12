@@ -7,6 +7,8 @@ const xss = require('xss-clean')
 const cors = require('cors')
 const hpp = require('hpp')
 const morgan = require('morgan')
+// const session = require('express-session')
+// const MongoStore = require('connect-mongo')
 // const cookieParser = require('cookie-parser')
 const fileUpload = require('express-fileupload')
 const AppError = require('./utils/AppError')
@@ -28,9 +30,6 @@ const stateRouter = require('./routes/states')
 
 const app = express()
 app.use(cors())
-
-// app.set('view engine', 'pug')
-// app.set('views', path.join(__dirname, 'views'))
 
 app.use(helmet())
 
@@ -67,12 +66,6 @@ const limitter = rateLimit({
   message: 'Too many attempts from this IP, please try again after an hour',
 })
 app.use('/api', limitter)
-
-// app.use((req, res, next) => {
-//   req.requestTime = new Date().toISOString()
-//   // console.log('COOKIES', req.cookies)
-//   next()
-// })
 
 // app.use('/', viewRouter)
 app.use('/api/v1/tours', tourRouter)

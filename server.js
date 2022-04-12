@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
-const session = require('express-session')
-const MongoStore = require('connect-mongo')
+// const session = require('express-session')
+// const MongoStore = require('connect-mongo')
 const colors = require('colors')
 require('dotenv').config()
 const app = require('./app')
@@ -50,21 +50,26 @@ const connection = mongoose
 //   })
 // )
 
-app.use(
-  session({
-    saveUninitialized: false, // don't create session until something stored
-    resave: false, //don't save session if unmodified
-    secret: process.env.JWT_SECRET,
-    cookie: {
-      maxAge: 1 * 60 * 1000,
-    },
-    store: MongoStore.create({
-      mongoUrl: process.env.DB_URL.replace('<PASSWORD>', process.env.DB_PASSWORD),
-      ttl: 14 * 24 * 60 * 60, // = 14 days. Default
-      collection: 'junk',
-    }),
-  })
-)
+// const sessionStore = new MongoStore({
+//   mongooseConnection: connection,
+//   collection: 'junk',
+// })
+
+// app.use(
+//   session({
+//     saveUninitialized: true, // don't create session until something stored
+//     resave: true, //don't save session if unmodified
+//     secret: 'process.env.JWT_SECRET',
+//     cookie: {
+//       maxAge: 1 * 60 * 1000,
+//     },
+//     store: MongoStore.create({
+//       mongoUrl: process.env.DB_URL.replace('<PASSWORD>', process.env.DB_PASSWORD),
+//       // ttl: 14 * 24 * 60 * 60, // = 14 days. Default
+//       // collectionName: 'junk',
+//     }),
+//   })
+// )
 
 const port = process.env.PORT || 8000
 const server = app.listen(port, 'localhost', () => {
