@@ -124,6 +124,17 @@ const schema = new mongoose.Schema(
       minlength: [8, 'Password must contain at least 8 charcaters'],
       select: false,
     },
+    passwordConfirm: {
+      type: String,
+      // required: [true, 'Confirmation Pasword is required'],
+      validate: {
+        // Only works on save()/create()
+        validator: function (val) {
+          return val === this.password
+        },
+        message: 'Passwords dont match',
+      },
+    },
     active: {
       type: Boolean,
       default: false,
@@ -148,6 +159,7 @@ schema.pre('save', async function (next) {
   if (!this.isModified('password')) return next()
   const salt = await bcrypt.genSalt(12)
   this.password = await bcrypt.hash(this.password, salt)
+  this.passwordConfirm = undefined
   next()
 })
 

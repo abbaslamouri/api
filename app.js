@@ -11,6 +11,8 @@ const morgan = require('morgan')
 // const MongoStore = require('connect-mongo')
 // const cookieParser = require('cookie-parser')
 const fileUpload = require('express-fileupload')
+const stripe = require('stripe')(process.env.STRIPE_SK)
+
 const AppError = require('./utils/AppError')
 const errorHandler = require('./utils/errorHandler')
 
@@ -29,11 +31,16 @@ const countryRouter = require('./routes/countries')
 const stateRouter = require('./routes/states')
 
 const app = express()
-app.use(cors())
+const corsOptions = {
+  // origin: 'http://localhost:4000',
+  // credentials: true, //access-control-allow-credentials:true
+  // optionSuccessStatus: 200,
+}
+app.use(cors(corsOptions))
 
 app.use(helmet())
 
-app.use(express.json({ limit: '1000kb' }))
+// app.use(express.json({ limit: '1000kb' }))
 app.use(express.urlencoded({ extended: true }))
 app.use(
   fileUpload({
@@ -57,6 +64,15 @@ app.use(mongoSanitize())
 // Data sanitization against xss
 app.use(xss())
 
+// Use JSON parser for all non-webhook routes
+app.use((req, res, next) => {
+  if (req.originalUrl === '/api/v1/orders/webhook') {
+    next()
+  } else {
+    express.json({ limit: '1000kb' })(req, res, next)
+  }
+})
+
 // Prevent HTTP parameter polution
 app.use(hpp({ whitelist: ['duration', 'ratingsAverage', 'ratingsQuantity', 'maxGroupSize', 'price', 'difficulty'] })) // <- THIS IS THE NEW LINE
 
@@ -67,7 +83,60 @@ const limitter = rateLimit({
 })
 app.use('/api', limitter)
 
-// app.use('/', viewRouter)
+// const endpointSecret = process.env.STRIPE_WSK
+// app.post('/api/v1/orders/webhook', express.raw({ type: 'application/json' }), (req, res) => {
+//   let event = req.body
+//   console.log('REQBODY', req.body)
+//   console.log('REQHEADERS', req.headers)
+
+//   if (endpointSecret) {
+//     // Get the signature sent by Stripe
+//     const signature = req.headers['stripe-signature']
+//     try {
+//       event = stripe.webhooks.constructEvent(req.body, signature, endpointSecret)
+//     } catch (err) {
+//       console.log(`⚠️  Webhook signature verification failed.`, err.message)
+//       return res.sendStatus(400)
+//     }
+//   }
+
+//   // Handle the event
+//   let paymentIntent = null
+//   switch (event.type) {
+//     case 'payment_intent.succeeded':
+//       paymentIntent = event.data.object
+//       console.log(`[${event.id}] PaymentIntent for ${paymentIntent.amount} was successful!`)
+//       // Then define and call a method to handle the successful payment intent.
+//       // handlePaymentIntentSucceeded(paymentIntent);
+//       break
+
+//     case 'payment_intent.created':
+//       paymentIntent = event.data.object
+//       console.log(`[${event.id}] PaymentIntent for ${paymentIntent.amount} was successful!`)
+//       // Then define and call a method to handle the successful payment intent.
+//       // handlePaymentIntentSucceeded(paymentIntent);
+//       break
+
+//     case 'payment_intent.processing':
+//       paymentIntent = event.data.object
+//       console.log(`[${event.id}] PaymentIntent for ${paymentIntent.amount} was successful!`)
+//       // Then define and call a method to handle the successful payment intent.
+//       // handlePaymentIntentSucceeded(paymentIntent);
+//       break
+
+//     case 'payment_method.attached':
+//       const paymentMethod = event.data.object
+//       // Then define and call a method to handle the successful attachment of a PaymentMethod.
+//       // handlePaymentMethodAttached(paymentMethod);
+//       break
+//     default:
+//       // Unexpected event type
+//       console.log(`Unhandled event type ${event.type}.`)
+//   }
+
+//   res.send()
+// })
+
 app.use('/api/v1/tours', tourRouter)
 app.use('/api/v1/auth', authRouter)
 app.use('/api/v1/users', userRouter)

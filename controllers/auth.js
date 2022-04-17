@@ -33,22 +33,24 @@ const sendTokenResponse = async (res, statusCode, user) => {
 }
 
 exports.signup = asyncHandler(async (req, res, next) => {
+  console.log('REQ', req.body)
   const user = await Model.create({
     name: req.body.name,
     email: req.body.email,
-    password: '#0elhEHh*3Uyc$r^JQ@Nit3&f!U3i',
+    password: req.body.password,
+    passwordConfirm: req.body.passwordConfirm,
   })
   const doc = await Model.create(user)
   if (!doc) return next(new AppError(`We can't create user ${req.body.name}`, 404))
   const resetToken = await user.createPasswordResetToken()
-  const url = `${req.protocol}//:${req.get('host')}/auth/${process.env.API_BASE}/completeSignup/${resetToken}`
+  // const url = `${req.protocol}//:${req.get('host')}/auth/${process.env.API_BASE}/verify/${resetToken}`
   await user.save()
   user.password = undefined
   // await new Email(user, url).sendCompleteSignup()
   res.status(200).json({
     status: 'success',
-    message: `Email sent to ${user.email}.  Please follow the link in your email to complete your registration.  Submit a PATCH request with email and password to  ${url} to complete the registration`,
-    url,
+    // message: `Email sent to ${user.email}.  Please follow the link in your email to complete your registration.  Submit a PATCH request with email and password to  ${url} to complete the registration`,
+    // url,
     resetToken,
   })
 
