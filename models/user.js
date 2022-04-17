@@ -145,32 +145,6 @@ const schema = new mongoose.Schema(
       type: String,
       maxlength: [2000, '2000 characters maximum'],
     },
-=======
-		avatar: {
-			type: mongoose.Schema.ObjectId,
-			ref: 'Media',
-		},
-		role: {
-			type: String,
-			enum: ['admin', 'shop-manager', 'customer', 'user', 'guide', 'lead-guide'],
-			default: 'user',
-		},
-		password: {
-			type: String,
-			required: [true, 'Pasword is required'],
-			minlength: [8, 'Password must contain at least 8 charcaters'],
-			select: false,
-		},
-		active: {
-			type: Boolean,
-			default: false,
-			select: false,
-		},
-		deliveryInstructions: {
-			type: String,
-			maxlength: [2000, '2000 characters maximum'],
-		},
->>>>>>> 5e8bac80734050c050a966f393d34774f28cd92e
 
 		passwordResetToken: String,
 		passwordResetExpires: Date,
