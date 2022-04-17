@@ -69,7 +69,10 @@ exports.fetchLoggedIn = asyncHandler(async (req, res, next) => {
 
 exports.updateLoggedInData = asyncHandler(async (req, res, next) => {
   if (req.body.password) return next(new AppError('You cannot use this route for passsword updates', 400))
-  const filteredBody = filteredObj(req.body, ['name', 'email'])
+  const filteredBody = filteredObj(req.body, ['name', 'email', 'shippingAddresses'])
+  console.log('RU', req.user)
+  console.log('RB', req.body)
+  console.log('FB', filteredBody)
   // if (req.file) filteredBody.photo = req.file.filename
   const user = await Model.findByIdAndUpdate(req.user.id, filteredBody, {
     new: true,

@@ -33,17 +33,15 @@ const sendTokenResponse = async (res, statusCode, user) => {
 }
 
 exports.signup = asyncHandler(async (req, res, next) => {
-  console.log('REQ', req.body)
   const user = await Model.create({
     name: req.body.name,
     email: req.body.email,
-    password: req.body.password,
-    passwordConfirm: req.body.passwordConfirm,
+    password: '#0elhEHh*3Uyc$r^JQ@Nit3&f!U3i',
   })
   const doc = await Model.create(user)
   if (!doc) return next(new AppError(`We can't create user ${req.body.name}`, 404))
   const resetToken = await user.createPasswordResetToken()
-  // const url = `${req.protocol}//:${req.get('host')}/auth/${process.env.API_BASE}/verify/${resetToken}`
+  // const url = `${req.protocol}//:${req.get('host')}/auth/${process.env.API_BASE}/completeSignup/${resetToken}`
   await user.save()
   user.password = undefined
   // await new Email(user, url).sendCompleteSignup()
@@ -90,6 +88,7 @@ exports.completeSignup = asyncHandler(async (req, res, next) => {
   user.password = req.body.password
   user.passwordResetToken = undefined
   user.passwordResetExpires = undefined
+  user.active = true
   console.log(user)
   await user.save()
   const url = `${process.env.BASE_URL}`

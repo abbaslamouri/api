@@ -42,7 +42,7 @@ module.exports = (err, req, res, next) => {
     error = new AppError(
       `${
         field[0].toUpperCase() + field.substring(1)
-      } must be unique.  A document with ${field} = ${fieldValue} exists in the database`,
+      } must be unique.  The specified ${field} = ${fieldValue} is already associated with a YRL account.`,
       400,
       'not-unique'
     )
