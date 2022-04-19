@@ -68,7 +68,11 @@ const schema = new mongoose.Schema(
         isDefault: { type: Boolean, default: false },
         phones: [
           {
-            phoneType: String,
+            phoneType: {
+              type: String,
+              enum: ['Cell', 'Work', 'Home'],
+              default: 'Cell',
+            },
             phoneNumber: String,
             phoneCountryCode: {
               type: mongoose.Schema.ObjectId,
