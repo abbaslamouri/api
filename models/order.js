@@ -33,7 +33,7 @@ const schema = new mongoose.Schema(
     coupons: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Coupon' }],
     paymentMethod: {
       type: String,
-      required: [true, 'Payment method is required'],
+      // required: [true, 'Payment method is required'],
     },
     paymentResults: {
       id: { type: String },

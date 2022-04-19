@@ -2,6 +2,52 @@ const express = require('express')
 const stripe = require('stripe')(process.env.STRIPE_SK)
 const AppError = require('../utils/AppError')
 const asyncHandler = require('../utils/asyncHandler')
+const Product = require('../models/product')
+
+exports.createOrder = (Model) =>
+  asyncHandler(async (req, res, next) => {
+    console.log('CREATING', req.body)
+    const items = req.body.items
+    const order = { total: 0, items: [] }
+    const total = 0
+    for (const prop in items) {
+      const product = await Product.findById(items[prop].product._id)
+      order.items[prop] = {
+        product: product._id,
+        name: product.name,
+        price: product.price,
+        salePrice: product.salePrice,
+        thumb: product.gallery && product.gallery[0] && product.gallery[0].path ? product.gallery[0].path : '',
+        productType: product.productType,
+        quantity: items[prop].quantity,
+      }
+      order.total = order.total + product.price * items[prop].quantity * 1
+    }
+    order.customer = req.body.customer._id
+    order.shippingAddress = req.body.customer.shippingAddresses.find((a) => a.selected == true)
+    order.state = 'order'
+    console.log('OOOOOOO', order)
+
+    // const doc = await Model.create(req.body)
+    // if (!doc) return next(new AppError(`We can't create document ${req.body.name}`, 404))
+    // res.status(201).json({
+    //   status: 'success',
+    //   doc,
+    // })
+  })
+
+exports.updateOrder = (Model) =>
+  asyncHandler(async (req, res, next) => {
+    const doc = await Model.findByIdAndUpdate(req.params.id, req.body, {
+      new: true, // Return new document
+      runValidators: true,
+    })
+    if (!doc) return next(new AppError(`We can't find a document with id = ${req.params.id}`, 404))
+    res.status(200).json({
+      status: 'success',
+      doc,
+    })
+  })
 
 exports.fetchPublishableKey = (Model) =>
   asyncHandler(async (req, res, next) => {
