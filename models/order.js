@@ -1,15 +1,16 @@
 const mongoose = require('mongoose')
+const { ObjectFlags } = require('typescript')
 
 const schema = new mongoose.Schema(
   {
-    state: {
-      type: String,
-      default: 'cart',
-      enum: {
-        values: ['cart', 'order'],
-        message: ' state must be either `cart` or `order`',
-      },
-    },
+    // state: {
+    //   type: String,
+    //   default: 'cart',
+    //   enum: {
+    //     values: ['cart', 'order'],
+    //     message: ' state must be either `cart` or `order`',
+    //   },
+    // },
     items: [
       {
         product: {
@@ -34,6 +35,9 @@ const schema = new mongoose.Schema(
     paymentMethod: {
       type: String,
       // required: [true, 'Payment method is required'],
+    },
+    shippingAddress: {
+      type: Object,
     },
     paymentResults: {
       id: { type: String },
@@ -63,8 +67,8 @@ const schema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['pending', 'processing', 'failed', 'completed'],
-      default: 'pending',
+      enum: ['cart', 'checkout', 'cart-shipping', 'cart-address', 'pending', 'processing', 'failed', 'completed'],
+      default: 'cart',
     },
     // delivered: {
     // 	type: Boolean,

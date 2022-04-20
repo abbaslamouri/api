@@ -10,7 +10,7 @@ const sendTokenResponse = async (res, statusCode, user) => {
   let token = null
   if (user) {
     token = await user.getSinedJwtToken()
-    auth = { token, user: { _id: user._id, name: user.name, email: user.email, role: user.role } }
+    auth = { token, user }
   }
   // res.cookie('auth', JSON.stringify(auth), {
   //   expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000),
