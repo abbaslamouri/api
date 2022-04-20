@@ -3,6 +3,7 @@ const stripe = require('stripe')(process.env.STRIPE_SK)
 const AppError = require('../utils/AppError')
 const asyncHandler = require('../utils/asyncHandler')
 const Product = require('../models/product')
+const Order = require('../models/order')
 
 exports.buildOrder = asyncHandler(async (req, res, next) => {
   console.log('CREATING', req.body)
@@ -21,6 +22,7 @@ exports.buildOrder = asyncHandler(async (req, res, next) => {
       quantity: items[prop].quantity,
     }
     order.total = order.total + product.price * items[prop].quantity * 1
+    order._id = req.body._id
   }
   order.customer = req.body.customer._id
   order.shippingAddress = req.body.customer.shippingAddresses.find((a) => a.selected == true)
@@ -66,7 +68,7 @@ exports.createPaymentIntent = (Model) =>
       currency: 'usd',
       payment_method_types: ['card'],
       metadata: {
-        email: req.body.email,
+        email: req.body.shippingAddress.email,
         name: req.body.shippingAddress.name,
         addressLine1: req.body.shippingAddress.addressLine1,
         addressLine2: req.body.shippingAddress.addressLine2,
@@ -74,6 +76,7 @@ exports.createPaymentIntent = (Model) =>
         state: req.body.shippingAddress.state.name,
         postalCode: req.body.shippingAddress.postalCode,
         country: req.body.shippingAddress.country.countryName,
+        orderId: req.body._id,
       },
     })
     res.status(200).json({
@@ -107,6 +110,7 @@ exports.handleWebhook = (Model) =>
       case 'payment_intent.succeeded':
         paymentIntent = event.data.object
         console.log(`[${event.id}] PaymentIntent for ${paymentIntent.amount} was successful! : ${paymentIntent.status}`)
+        console.log('SUCCESS', paymentIntent)
         // Then define and call a method to handle the successful payment intent.
         // handlePaymentIntentSucceeded(paymentIntent);
         break

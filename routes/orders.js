@@ -8,7 +8,7 @@ router.route('/webhook').post(express.raw({ type: 'application/json' }), handleW
 router.route('/publishableKey').get(fetchPublishableKey(Model))
 router.route('/').get(fetchAll(Model))
 router.route('/').post(buildOrder, createDoc(Model))
-router.route('/secret').post(createPaymentIntent(Model))
+router.route('/secret').post(buildOrder, createPaymentIntent(Model))
 router.route('/:id').delete(deleteDoc(Model))
 router.route('/:id').patch(buildOrder, updateDoc(Model))
 
