@@ -1,10 +1,11 @@
-const express = require('express')
+// const express = require('express')
 const stripe = require('stripe')(process.env.STRIPE_SK)
 const sgMail = require('@sendgrid/mail')
 const AppError = require('../utils/AppError')
 const asyncHandler = require('../utils/asyncHandler')
 const Product = require('../models/product')
 const Order = require('../models/order')
+const User = require('../models/user')
 
 exports.buildOrder = asyncHandler(async (req, res, next) => {
   console.log('CREATING', req.body)
@@ -63,27 +64,27 @@ exports.fetchPublishableKey = (Model) =>
 
 exports.createPaymentIntent = (Model) =>
   asyncHandler(async (req, res, next) => {
-    console.log('RB', req.body)
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: req.body.total * 100,
+    const order = await Order.findById(req.body._id)
+    order.status = 'payment'
+    order.save()
+    console.log('ORDER', order)
+    const paymentIntentPayload = {
+      amount: order.total * 100,
       currency: 'usd',
       payment_method_types: ['card'],
       metadata: {
-        email: req.body.shippingAddress.email,
-        name: req.body.shippingAddress.name,
-        addressLine1: req.body.shippingAddress.addressLine1,
-        addressLine2: req.body.shippingAddress.addressLine2,
-        city: req.body.shippingAddress.city,
-        state: req.body.shippingAddress.state.name,
-        postalCode: req.body.shippingAddress.postalCode,
-        country: req.body.shippingAddress.country.countryName,
-        orderId: req.body._id,
+        orderId: order.id,
       },
-    })
+      setup_future_usage: 'on_session',
+    }
+    if (order.customer) paymentIntentPayload.customer = (await User.findById(order.customer)).stripeCustomerId
+    console.log('FFFFFF', paymentIntentPayload)
+    const paymentIntent = await stripe.paymentIntents.create(paymentIntentPayload)
+    console.log('PI', paymentIntent)
     res.status(200).json({
       status: 'success',
       clientSecret: paymentIntent.client_secret,
-      paymentIntent,
+      // paymentIntent,
     })
   })
 
@@ -111,7 +112,7 @@ exports.handleWebhook = (Model) =>
       case 'payment_intent.succeeded':
         paymentIntent = event.data.object
         console.log(`[${event.id}] PaymentIntent for ${paymentIntent.amount} was successful! : ${paymentIntent.status}`)
-        console.log('SUCCESS', paymentIntent.metadata)
+        console.log('SUCCESS', paymentIntent)
         const order = await Order.findById(paymentIntent.metadata.orderId)
         if (!order) return next()
         console.log('ORDER', order)
@@ -133,16 +134,15 @@ exports.handleWebhook = (Model) =>
             email: 'support@yrlus.com',
             name: 'Abbas Lamouri',
           },
-          subject: "Thank you for your order",
+          subject: 'Thank you for your order',
           template_id: process.env.ORDER_TEMPLATE_ID,
           dynamic_template_data: {
-            retailer: "YRL Consulting",
-            items:order.Items
+            retailer: 'YRL Consulting',
+            items: order.items,
           },
         }
 
-        await sgMail.send(msg)
-        console.log('therHEREe')
+        console.log('SEND', await sgMail.send(msg))
         ///////Mail
         // Then define and call a method to handle the successful payment intent.
         // handlePaymentIntentSucceeded(paymentIntent);

@@ -5,6 +5,9 @@ const bcrypt = require('bcryptjs')
 
 const schema = new mongoose.Schema(
   {
+    stripeCustomerId: {
+      type: 'String',
+    },
     name: {
       type: String,
       required: [true, 'Name is required'],

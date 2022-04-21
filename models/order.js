@@ -67,7 +67,7 @@ const schema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['cart', 'checkout', 'address', 'shipping', 'pending', 'processing', 'failed', 'completed'],
+      enum: ['cart', 'checkout', 'address', 'shipping', 'payment', 'pending', 'processing', 'failed', 'completed'],
       default: 'cart',
     },
     // delivered: {

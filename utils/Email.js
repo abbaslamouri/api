@@ -1,60 +1,44 @@
-const path = require('path')
-const nodemailer = require('nodemailer')
-const pug = require('pug')
-const htmlToText = require('html-to-text')
+const sgMail = require('@sendgrid/mail')
 const colors = require('colors')
 
 class Email {
-  constructor(user, url) {
-    this.to = user.email
-    this.firstname = user.name.split(' ')[0]
-    this.url = url
-    this.from = `${process.env.FROM_NAME}<${process.env.FROM_EMAIL}>`
+  constructor(data) {
+    this.to = data.user.email
+    this.firstname = data.user.name.split(' ')[0]
+    this.url = data.url
+    this.subject = data.emailSubject
+    this.data = data
   }
 
-  emailTransport() {
-    if (process.env.NODE_ENV === 'development') {
-      return nodemailer.createTransport({
-        service: 'Sendgrid',
-        auth: {
-          user: process.env.SENDGRID_USERNAME,
-          pass: process.env.SENDGRID_PASSWORD,
-        },
-      })
-    }
+  async send(templateId) {
+    console.log('SPREAD', { ...this.data, firstname: this.firstname })
+    sgMail.setApiKey(process.env.SENDGRID_API_KEY)
 
-    return nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: process.env.SMTP_PORT,
-      auth: {
-        user: process.env.SMTP_USERNAME,
-        pass: process.env.SMTP_PASSWORD,
+    const msg = {
+      to: {
+        email: this.to,
+        name: this.firsname,
       },
-    })
-  }
 
-  async send(template, subject) {
-    const html = pug.renderFile(path.join(__dirname, `../templates/emails/${template}.pug`), {
-      firstname: this.firstname,
-      url: this.url,
-      subject,
-    })
-
-    const mailOptions = {
-      from: this.from,
-      to: this.to,
-      subject,
-      html,
-      text: htmlToText.fromString(html),
+      from: {
+        email: process.env.FROM_EMAIL,
+        name: process.env.FROM_NAME,
+      },
+      replyTo: {
+        email: process.env.FROM_EMAIL,
+        name: process.env.FROM_NAME,
+      },
+      subject: this.subject,
+      template_id: templateId,
+      dynamic_template_data: { ...this.data, firstname: this.firstname, subject: this.subject },
     }
 
-    const info = await this.emailTransport().sendMail(mailOptions)
-
-    console.log(colors.brightGreen.bold('Message sent: %s', info.messageId))
+    await sgMail.send(msg)
+    console.log(colors.brightGreen.bold('Message sent'))
   }
 
   async sendCompleteSignup() {
-    await this.send('complete-signup', 'Please complete your registration within 10 minutes')
+    await this.send(process.env.SIGNUP_TEMPLATE_ID)
   }
 
   async sendWelcome() {
@@ -65,28 +49,5 @@ class Email {
     await this.send('reset-password', 'Your password reset token (valid for 10 minutes)')
   }
 }
-
-// const sendEmail = async (options) => {
-//   var transporter = nodemailer.createTransport({
-//     host: process.env.SMTP_HOST,
-//     port: process.env.SMTP_PORT,
-//     auth: {
-//       user: process.env.SMTP_USERNAME,
-//       pass: process.env.SMTP_PASSWORD,
-//     },
-//   })
-
-//   const mailOptions = {
-//     from: `${process.env.FROM_NAME} <${process.env.FROM_EMAIL}>`,
-//     to: options.to,
-//     subject: options.subject,
-//     text: options.text,
-//     html: options.html,
-//   }
-
-//   const info = await transporter.sendMail(mailOptions)
-
-//   console.log(colors.brightGreen.bold('Message sent: %s', info.messageId))
-// }
 
 module.exports = Email

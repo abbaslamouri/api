@@ -1,10 +1,12 @@
 const jwt = require('jsonwebtoken')
+const stripe = require('stripe')(process.env.STRIPE_SK)
+// const sgMail = require('@sendgrid/mail')
 const crypto = require('crypto')
 const { promisify } = require('util')
 const Model = require('../models/user.js')
 const AppError = require('../utils/AppError')
 const asyncHandler = require('../utils/asyncHandler')
-const Email = require('../utils/Email')
+const sendEmail = require('../utils/Email')
 
 const sendTokenResponse = async (res, statusCode, user) => {
   let token = null
@@ -33,23 +35,35 @@ const sendTokenResponse = async (res, statusCode, user) => {
 }
 
 exports.signup = asyncHandler(async (req, res, next) => {
-  const user = await Model.create({
-    name: req.body.name,
-    email: req.body.email,
+  console.log('RB', req.body)
+  const { user, completeSingupUrl, emailSubject } = req.body
+  const customer = await stripe.customers.create({ ...user })
+  if (customer) user.stripeCustomerId = customer.id
+  console.log('CUSTOMER', customer)
+  const doc = await Model.create({
+    ...user,
+    // name: req.body.name,
+    // email: req.body.email,
     password: '#0elhEHh*3Uyc$r^JQ@Nit3&f!U3i',
   })
-  const doc = await Model.create(user)
-  if (!doc) return next(new AppError(`We can't create user ${req.body.name}`, 404))
-  const resetToken = await user.createPasswordResetToken()
+  // const doc = await Model.create(user)
+  if (!doc) return next(new AppError(`We can't create user ${user.name}`, 404))
+  const resetToken = await doc.createPasswordResetToken()
   // const url = `${req.protocol}//:${req.get('host')}/auth/${process.env.API_BASE}/completeSignup/${resetToken}`
-  await user.save()
-  user.password = undefined
+  await doc.save()
+  doc.password = undefined
   // await new Email(user, url).sendCompleteSignup()
+  await new sendEmail({
+    user,
+    emailSubject,
+    url: `${completeSingupUrl}/?token=${resetToken}`,
+  }).sendCompleteSignup()
+
   res.status(200).json({
     status: 'success',
     // message: `Email sent to ${user.email}.  Please follow the link in your email to complete your registration.  Submit a PATCH request with email and password to  ${url} to complete the registration`,
     // url,
-    resetToken,
+    message: 'Email sent',
   })
 
   // } catch (err) {
