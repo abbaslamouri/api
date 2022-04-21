@@ -1,5 +1,6 @@
 const express = require('express')
 const stripe = require('stripe')(process.env.STRIPE_SK)
+const sgMail = require('@sendgrid/mail')
 const AppError = require('../utils/AppError')
 const asyncHandler = require('../utils/asyncHandler')
 const Product = require('../models/product')
@@ -110,7 +111,39 @@ exports.handleWebhook = (Model) =>
       case 'payment_intent.succeeded':
         paymentIntent = event.data.object
         console.log(`[${event.id}] PaymentIntent for ${paymentIntent.amount} was successful! : ${paymentIntent.status}`)
-        console.log('SUCCESS', paymentIntent)
+        console.log('SUCCESS', paymentIntent.metadata)
+        const order = await Order.findById(paymentIntent.metadata.orderId)
+        if (!order) return next()
+        console.log('ORDER', order)
+
+        //////Mail
+        sgMail.setApiKey(process.env.SENDGRID_API_KEY)
+
+        const msg = {
+          to: {
+            email: order.shippingAddress.email,
+            name: order.shippingAddress.name,
+          },
+
+          from: {
+            email: 'support@yrlus.com',
+            name: 'YRL Consulting',
+          },
+          replyTo: {
+            email: 'support@yrlus.com',
+            name: 'Abbas Lamouri',
+          },
+          subject: "Thank you for your order",
+          template_id: process.env.ORDER_TEMPLATE_ID,
+          dynamic_template_data: {
+            retailer: "YRL Consulting",
+            items:order.Items
+          },
+        }
+
+        await sgMail.send(msg)
+        console.log('therHEREe')
+        ///////Mail
         // Then define and call a method to handle the successful payment intent.
         // handlePaymentIntentSucceeded(paymentIntent);
         break
