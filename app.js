@@ -151,6 +151,10 @@ app.use('/api/v1/orders', orderRouter)
 app.use('/api/v1/countries', countryRouter)
 app.use('/api/v1/states', stateRouter)
 
+app.get('/favico.ico', (req, res) => {
+  res.sendFile('myfavico.ico')
+})
+
 app.all('*', (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server`, 404))
 })
