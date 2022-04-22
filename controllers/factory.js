@@ -31,6 +31,7 @@ exports.fetchAll = (Model) =>
 
 exports.fetchDoc = (Model, populateOptions = {}) =>
   asyncHandler(async (req, res, next) => {
+    console.log('REqPARAMS', req.params)
     const doc = await Model.findById(req.params.id)
     if (!doc) return next(new AppError(`We can't find a document with id = ${req.params.id}`, 404))
     res.status(200).json({

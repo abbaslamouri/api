@@ -1,58 +1,53 @@
 // const express = require('express')
 const stripe = require('stripe')(process.env.STRIPE_SK)
-const sgMail = require('@sendgrid/mail')
+// const sgMail = require('@sendgrid/mail')
 const AppError = require('../utils/AppError')
+const sendEmail = require('../utils/Email')
 const asyncHandler = require('../utils/asyncHandler')
 const Product = require('../models/product')
 const Order = require('../models/order')
 const User = require('../models/user')
 
-exports.buildOrder = asyncHandler(async (req, res, next) => {
+exports.updateOrder = asyncHandler(async (req, res, next) => {
   console.log('CREATING', req.body)
-  const items = req.body.items
-  const order = { total: 0, items: [] }
-  for (const prop in items) {
-    const product = await Product.findById(items[prop].product._id)
-    if (!product) return next(new AppError(`We can't find a document with id = ${items[prop].product._id}`, 404))
-    order.items[prop] = {
-      product: product._id,
-      name: product.name,
-      price: product.price,
-      salePrice: product.salePrice,
-      thumb: product.gallery && product.gallery[0] && product.gallery[0].path ? product.gallery[0].path : '',
-      productType: product.productType,
-      quantity: items[prop].quantity,
+  let orderObj = { total: 0, items: [] }
+  for (const prop in req.body.items) {
+    const product = await Product.findById(req.body.items[prop].product._id)
+    // console.log('PRODUCT', product)
+    if (product) {
+      orderObj.items[prop] = {
+        product: product._id,
+        name: product.name,
+        price: product.price,
+        salePrice: product.salePrice,
+        thumb:
+          product.gallery && product.gallery[0] && product.gallery[0].url
+            ? product.gallery[0].url
+            : 'http://localhost:5000/placeholder.png',
+        productType: product.productType,
+        quantity: req.body.items[prop].quantity,
+      }
+
+      orderObj.total = orderObj.total + product.price * req.body.items[prop].quantity * 1
     }
-    order.total = order.total + product.price * items[prop].quantity * 1
-    order._id = req.body._id
   }
-  order.customer = req.body.customer._id
-  order.shippingAddress = req.body.customer.shippingAddresses.find((a) => a.selected == true)
-  order.status = req.body.status
-  req.body = order
+  orderObj.customer = req.body.customer._id ? req.body.customer : undefined
+  orderObj.shippingAddress = req.body.customer.shippingAddresses.find((a) => a.selected == true)
+  orderObj.status = req.body.status
+  let order = {}
+  if (req.body.id)
+    order = await Order.findByIdAndUpdate(req.body.id, orderObj, {
+      new: true, // Return new document
+      runValidators: true,
+    })
+  else order = await Order.create(orderObj)
   console.log('OOOOOOO', order)
-  next()
-
-  // const doc = await Model.create(req.body)
-  // if (!doc) return next(new AppError(`We can't create document ${req.body.name}`, 404))
-  // res.status(201).json({
-  //   status: 'success',
-  //   doc,
-  // })
+  if (!order) return next(new AppError(`We can't create order, please try again later`, 404))
+  res.status(201).json({
+    status: 'success',
+    doc: order,
+  })
 })
-
-// exports.updateOrder = (Model) =>
-//   asyncHandler(async (req, res, next) => {
-//     const doc = await Model.findByIdAndUpdate(req.params.id, req.body, {
-//       new: true, // Return new document
-//       runValidators: true,
-//     })
-//     if (!doc) return next(new AppError(`We can't find a document with id = ${req.params.id}`, 404))
-//     res.status(200).json({
-//       status: 'success',
-//       doc,
-//     })
-//   })
 
 exports.fetchPublishableKey = (Model) =>
   asyncHandler(async (req, res, next) => {
@@ -64,10 +59,12 @@ exports.fetchPublishableKey = (Model) =>
 
 exports.createPaymentIntent = (Model) =>
   asyncHandler(async (req, res, next) => {
-    const order = await Order.findById(req.body._id)
+    console.log('RRRRRRRRRRR', req.body)
+    const order = await Order.findById(req.body.orderId)
+    console.log('ORDER', order)
+
     order.status = 'payment'
     order.save()
-    console.log('ORDER', order)
     const paymentIntentPayload = {
       amount: order.total * 100,
       currency: 'usd',
@@ -76,6 +73,7 @@ exports.createPaymentIntent = (Model) =>
         orderId: order.id,
       },
       setup_future_usage: 'on_session',
+      // payment_method: 'pm_1Kr8dIKR1nb4cWr4ZTTMgb2x',
     }
     if (order.customer) paymentIntentPayload.customer = (await User.findById(order.customer)).stripeCustomerId
     console.log('FFFFFF', paymentIntentPayload)
@@ -116,36 +114,31 @@ exports.handleWebhook = (Model) =>
         const order = await Order.findById(paymentIntent.metadata.orderId)
         if (!order) return next()
         console.log('ORDER', order)
+        order.status = 'processing'
+        order.save()
 
-        //////Mail
-        sgMail.setApiKey(process.env.SENDGRID_API_KEY)
-
-        const msg = {
-          to: {
-            email: order.shippingAddress.email,
-            name: order.shippingAddress.name,
-          },
-
-          from: {
-            email: 'support@yrlus.com',
-            name: 'YRL Consulting',
-          },
-          replyTo: {
-            email: 'support@yrlus.com',
-            name: 'Abbas Lamouri',
-          },
-          subject: 'Thank you for your order',
-          template_id: process.env.ORDER_TEMPLATE_ID,
-          dynamic_template_data: {
-            retailer: 'YRL Consulting',
-            items: order.items,
-          },
+        const emailPayload = {
+          emailSubject: 'Thank you for your order',
+          url: ``,
+          items: order.items,
+          total: order.total,
+          orderNumber: order.id,
+          date: new Date().toLocaleString(),
         }
 
-        console.log('SEND', await sgMail.send(msg))
-        ///////Mail
-        // Then define and call a method to handle the successful payment intent.
-        // handlePaymentIntentSucceeded(paymentIntent);
+        if (order.customer) {
+          // authenticated (user with accounts)
+          const user = await User.findById(order.customer)
+          console.log('USER', user)
+          emailPayload.name = user.name
+          emailPayload.email = user.email
+        } else {
+          // authenticated (guest checkout)
+          emailPayload.name = order.shippingAddress.name
+          emailPayload.email = order.shippingAddress.email
+        }
+        console.log('PAYLOAD', emailPayload)
+        await new sendEmail(emailPayload).sendOrderProcessing()
         break
 
       case 'payment_intent.created':

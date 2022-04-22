@@ -35,33 +35,29 @@ const schema = new mongoose.Schema(
         company: '',
         name: {
           type: String,
-          // default: '',
+        },
+        email: {
+          type: String,
         },
         addressLine1: {
           type: String,
-          // default: '',
         },
         addressLine2: {
           type: String,
-          // default: '',
         },
         city: {
           type: String,
-          // default: ''
         },
         state: {
           type: mongoose.Schema.ObjectId,
           ref: 'State',
-          // default: '',
         },
         postalCode: {
           type: String,
-          // default: '',
         },
         country: {
           type: mongoose.Schema.ObjectId,
           ref: 'Country',
-          // default: '',
         },
         addressType: {
           type: String,
@@ -69,6 +65,7 @@ const schema = new mongoose.Schema(
           default: 'Residential',
         },
         isDefault: { type: Boolean, default: false },
+        selected: { type: Boolean, default: false },
         phones: [
           {
             phoneType: {
@@ -80,7 +77,6 @@ const schema = new mongoose.Schema(
             phoneCountryCode: {
               type: mongoose.Schema.ObjectId,
               ref: 'Country',
-              // default: '',
             },
           },
         ],

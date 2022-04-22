@@ -42,52 +42,23 @@ exports.signup = asyncHandler(async (req, res, next) => {
   console.log('CUSTOMER', customer)
   const doc = await Model.create({
     ...user,
-    // name: req.body.name,
-    // email: req.body.email,
     password: '#0elhEHh*3Uyc$r^JQ@Nit3&f!U3i',
   })
-  // const doc = await Model.create(user)
   if (!doc) return next(new AppError(`We can't create user ${user.name}`, 404))
   const resetToken = await doc.createPasswordResetToken()
-  // const url = `${req.protocol}//:${req.get('host')}/auth/${process.env.API_BASE}/completeSignup/${resetToken}`
   await doc.save()
   doc.password = undefined
-  // await new Email(user, url).sendCompleteSignup()
   await new sendEmail({
-    user,
+    name: user.name,
+    email: user.email,
     emailSubject,
     url: `${completeSingupUrl}/?token=${resetToken}`,
   }).sendCompleteSignup()
 
   res.status(200).json({
     status: 'success',
-    // message: `Email sent to ${user.email}.  Please follow the link in your email to complete your registration.  Submit a PATCH request with email and password to  ${url} to complete the registration`,
-    // url,
     message: 'Email sent',
   })
-
-  // } catch (err) {
-  //   console.log(err)
-  //   user.passwordResetToken = undefined
-  //   user.passwordResetExpire = undefined
-  //   await user.save({ validateBeforeSave: false })
-  //   return next(new AppError('Email coulnd not be sent, please try agian later', 500))
-  // }
-  // const user = await User.create({
-  //   name: req.body.name,
-  //   email: req.body.email,
-  //   password: req.body.password,
-  //   passwordConfirm: req.body.passwordConfirm,
-  //   role: req.body.role,
-  // })
-  // createSendToken(user, 201, res)
-  // // res.status(201).json({
-  // //   status: 'success',
-  // //   token: await signToken(user._id),
-  // //   data: {
-  // //     user,
-  // //   },
-  // // })
 })
 
 exports.completeSignup = asyncHandler(async (req, res, next) => {
@@ -173,56 +144,36 @@ exports.isLoggedIn = asyncHandler(async (req, res, next) => {
 })
 
 exports.forgotPassword = asyncHandler(async (req, res, next) => {
-  const { email } = req.body
+  const { email, passwordResetUrl, emailSubject } = req.body
   if (!email) return next(new AppError('Please enter a valid email', 404))
   const user = await Model.findOne({ email })
   if (!user) return next(new AppError('We cannot find user with this email in our database', 404))
   const resetToken = await user.createPasswordResetToken()
   await user.save({ validateBeforeSave: false })
-  const url = `${req.protocol}//:${req.get('host')}/api/v1/users/resetPassword/${resetToken}`
-  // await new Email(user, url).sendResetPassword()
+  user.password = undefined
+  await new sendEmail({
+    name: user.name,
+    email: user.email,
+    emailSubject,
+    url: `${passwordResetUrl}/?token=${resetToken}`,
+  }).sendResetPassword()
+
   res.status(200).json({
     status: 'success',
-    user: { name: user.name, email: user, email },
-    message: `Forgot your password?  Submit a PATCH request with password and passwordConfirm to: ${url}.  If you did not submit a request, please ignore this email.`,
-    url,
-    resetToken,
+    message: 'Email sent',
   })
-
-  // try {
-  // await sendEmail({
-  //   to: user.email,
-  //   subject: 'Your password reset token (valid for 10 minutes)',
-  //   text: message,
-  // })
-  // createSendToken(user, 200, res)
-
-  // res.status(200).json({
-  //   status: 'success',
-  //   message: 'Check your email for a password reset token',
-  // })
-  // } catch (error) {
-  //   user.passwordResetToken = undefined
-  //   user.passwordResetExpires = undefined
-  //   await user.save({ validateBeforeSave: false })
-  //   return next(new AppError('There was an error sending the message, please try agian later', 500))
-  // }
 })
 
 exports.resetPassword = asyncHandler(async (req, res, next) => {
+  console.log('RP', req.params)
   const hashedToken = await crypto.createHash('sha256').update(req.params.token).digest('hex')
   const user = await Model.findOne({ passwordResetToken: hashedToken, passwordResetExpires: { $gt: Date.now() } })
   if (!user) return next(new AppError('Token is invlaid or has expired', 400))
   user.password = req.body.password
-  // user.passwordConfirm = req.body.passwordConfirm
   user.passwordResetToken = undefined
   user.passwordResetExpires = undefined
   await user.save()
   sendTokenResponse(res, 200, user)
-  // res.status(200).json({
-  //   status: 'success',
-  //   token: await signToken(user._id),
-  // })
 })
 
 exports.updateLoggedInPassword = asyncHandler(async (req, res, next) => {
@@ -232,14 +183,6 @@ exports.updateLoggedInPassword = asyncHandler(async (req, res, next) => {
   if (!(await user.checkPassword(req.body.currentPassword, user.password)))
     return next(new AppError('Invalid current password', 401))
   user.password = req.body.password
-  // user.passwordConfirm = req.body.passwordConfirm
   await user.save()
   sendTokenResponse(res, 200, user)
-  // res.status(201).json({
-  //   status: 'success',
-  //   token: await signToken(user._id),
-  //   data: {
-  //     user,
-  //   },
-  // })
 })

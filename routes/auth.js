@@ -16,8 +16,8 @@ router.route('/signup').post(signup)
 router.route('/completeSignup/:token').patch(completeSignup)
 router.route('/signin').post(signin)
 router.route('/signout').get(signout)
-router.route('/forgotPassword').post(forgotPassword)
-router.route('/resetPassword/:token').patch(resetPassword)
+router.route('/forgotpassword').post(forgotPassword)
+router.route('/resetpassword/:token').patch(resetPassword)
 
 router.use(protect)
 

@@ -1,5 +1,4 @@
 const mongoose = require('mongoose')
-const { ObjectFlags } = require('typescript')
 
 const schema = new mongoose.Schema(
   {
@@ -18,15 +17,16 @@ const schema = new mongoose.Schema(
           ref: 'Product',
           required: [true, 'A product is required to save cart in the database'],
         },
-        variant: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: 'Variant',
-        },
+        // variant: {
+        //   type: mongoose.Schema.Types.ObjectId,
+        //   ref: 'Variant',
+        // },
         name: String,
         quantity: Number,
         price: Number,
         salePrice: Number,
         productType: String,
+        thumb: String,
       },
     ],
     customer: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
